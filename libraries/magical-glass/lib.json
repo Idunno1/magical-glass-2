@@ -1,0 +1,12 @@
+{
+    "id": "magical-glass",
+    "authors": [
+        "Nyakorita",                    // original author
+        "Sam Deluxe",                   // current author and lead programmer
+        "Bor",                          // contributor of og magical glass
+        "Just Another Random User",     // contributor of og magical glass
+        "FireRainV"                     // contributor of og magical glass
+    ],
+    "version": "v1.2.0-dev",
+    "engineVer": "v0.9.0-dev"
+}
