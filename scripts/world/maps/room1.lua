@@ -1,7 +1,7 @@
 return {
-  version = "1.10",
+  version = "1.11",
   luaversion = "5.1",
-  tiledversion = "1.10.2",
+  tiledversion = "1.11.0",
   class = "",
   orientation = "orthogonal",
   renderorder = "right-down",
@@ -10,7 +10,7 @@ return {
   tilewidth = 40,
   tileheight = 40,
   nextlayerid = 6,
-  nextobjectid = 37,
+  nextobjectid = 42,
   properties = {
     ["light"] = true,
     ["name"] = "Test Map - Room 1"
@@ -434,7 +434,7 @@ return {
         },
         {
           id = 27,
-          name = "savepoint",
+          name = "lightsavepoint",
           type = "",
           shape = "rectangle",
           x = 80,
@@ -444,6 +444,7 @@ return {
           rotation = 0,
           visible = true,
           properties = {
+            ["advanced_menu"] = false,
             ["text1"] = "* Silence echoes in the darkness\nof this familiar-yet-different\nscenery.",
             ["text2"] = "* The power of avoiding copying\nofficial music shines within\nyou."
           }
@@ -508,6 +509,35 @@ return {
             ["actor"] = "wall",
             ["flagcheck"] = "wall_hit",
             ["text1"] = "* I Am the Wall Guardian.[wait:5]\n* This Wall is Off Limits for you\nno-good wall slammers."
+          }
+        },
+        {
+          id = 39,
+          name = "storagebox",
+          type = "",
+          shape = "rectangle",
+          x = 430,
+          y = 160,
+          width = 40,
+          height = 40,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 41,
+          name = "enemy",
+          type = "",
+          shape = "rectangle",
+          x = 430,
+          y = 290,
+          width = 40,
+          height = 40,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["actor"] = "dummy_ut",
+            ["lightencounter"] = "test"
           }
         }
       }

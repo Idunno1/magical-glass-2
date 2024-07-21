@@ -1,95 +1,77 @@
 MagicalGlass = {}
 local lib = MagicalGlass
 
-MagicalGlass.PALETTE = {
-    ["hp"]       = COLORS.yellow,
-    ["hp_back"]  = COLORS.red,
+-- VARIABLES
 
-    ["karma"]    = { 192/255, 0, 0, 1 },
+local mg_palette_data = {
+    ["pink_spare"]         = {1, 167/255, 212/255, 1},
 
-    ["defend"]   = COLORS.aqua,
+    ["player_health_back"] = COLORS.red,
+    ["player_health"]      = COLORS.yellow,
 
-    ["en"]       = { 184/255, 213/255, 70/255, 1 },
-    ["en_back"]  = { 62/255, 283/255, 100/255, 1 }
+    ["player_attack"]      = { 1, 105/255, 105/255, 1 },
+
+    ["menu_health_back"]   = { 128 / 255, 0, 0, 1 },
+    ["menu_health"]        = COLORS.lime,
+
+    ["enemy_health_back"]  = { 128 / 255, 0, 0, 1 },
+    ["enemy_health"]       = COLORS.lime,
+    ["enemy_mercy"]        = COLORS.yellow,
+
+    ["karma"]              = { 192/255, 0, 0, 1 },
+
+    ["defend"]             = COLORS.aqua,
+
+    ["tension_back"]       = { 128 / 255, 0, 0, 1 },
+    ["tension_decrease"]   = { 1, 0, 0, 1 },
+    ["tension_fill"]       = { 255 / 255, 160 / 255, 64 / 255, 1 },
+    ["tension_max"]        = { 255 / 255, 208 / 255, 32 / 255, 1 },
+    ["tension_maxtext"]    = { 1, 1, 0, 1 },
+    ["tension_desc"]       = { 255 / 255, 160 / 255, 64 / 255, 1 },
+
+    ["en_back"]            = { 62/255, 283/255, 100/255, 1 },
+    ["en"]                 = { 184/255, 213/255, 70/255, 1 }
 }
+MagicalGlass.PALETTE = {}
 setmetatable(MagicalGlass.PALETTE, {
-    __index = function (t, i) return Kristal.callEvent("getMGPaletteColor", i) or palette_data[i] end,
-    __newindex = function (t, k, v) palette_data[k] = v end,
+    __index = function (t, i) return Kristal.callEvent("getMGPaletteColor", i) or mg_palette_data[i] end,
+    __newindex = function (t, k, v) mg_palette_data[k] = v end,
 })
 
--- Events
+MagicalGlass.EVENT = {
+    beforeLightBattleStateChange    = "beforeLightBattleStateChange",    -- old, new, reason, extra
+    onLightBattleStateChange        = "onLightBattleStateChange",        -- old, new, reason, extra
+    beforeLightBattleSubStateChange = "beforeLightBattleSubStateChange", -- old, new, reason, extra
+    onLightBattleSubStateChange     = "onLightBattleSubStateChange",     -- old, new, reason, extra
 
-function lib:init()
-    print("oh boy here we go again")
-    print("Loaded Magical Glass 2!")
+    onLightBattleActionCommit       = "onLightBattleActionCommit",       -- action, action name, user, target
+    onLightBattleActionUndo         = "onLightBattleActionUndo",         -- action, action name, user, target
+    onLightBattleActionBegin        = "onLightBattleActionBegin",        -- action, action name, user, target
+    onLightBattleAction             = "onLightBattleAction",             -- action, action name, user, target
+    onLightBattleActionEnd          = "onLightBattleActionEnd",          -- action, action name, user, target, don't end
 
-    self:initRegistry()
-    for _,path,_ in Registry.iterScripts("init") do
-        Kristal.executeLibScript("magical-glass", path)
-    end
-end
+    getLightBattleActionOrder       = "getLightBattleActionOrder",       -- order, encounter
 
-function lib:save(data)
-    data.magical_glass_2 = {}
-    data.magical_glass_2["default_battle_system"] = self.default_battle_system
-    data.magical_glass_2["light_battle_mercy_messages"] = self.light_battle_mercy_messages
+    onLightBattleActionButtonSelect = "onLightBattleActionButtonSelect", -- battler, button, selectable
 
-    data.magical_glass_2["__current_battle_system"] = self.__current_battle_system
-end
+    preLightBattleUIDraw            = "preLightBattleUIDraw",            -- LightBattleUI
+    onLightBattleUIDraw             = "onLightBattleUIDraw",             -- LightBattleUI
+}
 
-function lib:load(data, is_new_file)
-    if not data.magical_glass_2 then
-        self.default_battle_system = Kristal.getLibConfig("magical-glass", "defaultBattleSystem") or "deltarune"
-        self.light_battle_mercy_messages = Kristal.getLibConfig("magical-glass", "lightBattleMercyMessages") or false
+-- not a fan of looping through every object in existence
+MagicalGlass.__dust_objects = 0
+MagicalGlass.__DUST_OBJECT_LIMIT = 8000
 
-        self.__current_battle_system = nil
-    else
-        self.default_battle_system = data.magical_glass_2["default_battle_system"]
-        self.light_battle_mercy_messages = data.magical_glass_2["light_battle_mercy_messages"]
-
-        self.__current_battle_system = data.magical_glass_2["__current_battle_system"]
-    end
-end
-
-function lib:registerDebugOptions(debug)
-    debug:registerMenu("encounter_select", "Encounter Select")
-
-    debug:registerOption("encounter_select", "Start Dark Encounter", "Start a dark encounter.", function()
-        debug:enterMenu("dark_encounter_select", 0)
-    end)
-    debug:registerOption("encounter_select", "Start Light Encounter", "Start a light encounter.", function()
-        debug:enterMenu("light_encounter_select", 0)
-    end)
-
-    debug:registerMenu("dark_encounter_select", "Select Dark Encounter", "search")
-    for id,_ in pairs(Registry.encounters) do
-        debug:registerOption("dark_encounter_select", id, "Start this encounter.", function()
-            Game:encounterDark(id, true, nil, nil, false)
-            debug:closeMenu()
-        end)
-    end
-
-    debug:registerMenu("light_encounter_select", "Select Light Encounter", "search")
-    for id,_ in pairs(self.light_encounters) do
-        if id ~= "_nobody" then
-            debug:registerOption("light_encounter_select", id, "Start this encounter.", function()
-                Game:encounterLight(id, true, nil, nil, true)
-                debug:closeMenu()
-            end)
-        end
-    end
-end
-
-function lib:unload()
-    MagicalGlass = nil
-end
-
--- Registry
+-- REGISTRY
 
 function lib:initRegistry()
     self.random_encounters = {}
+    
     self.light_encounters = {}
     self.light_enemies = {}
+    self.light_waves = {}
+    self.light_battle_cutscenes = {}
+
     self.light_shops = {}
 
     for _,path,rnd_enc in Registry.iterScripts("battle/randomencounters") do
@@ -108,6 +90,18 @@ function lib:initRegistry()
         assert(light_enemy ~= nil, '"lightenemies/'..path..'.lua" does not return value')
         light_enemy.id = light_enemy.id or path
         self.light_enemies[light_enemy.id] = light_enemy
+    end
+
+    for _,path,light_wave in Registry.iterScripts("battle/lightwaves") do
+        assert(light_wave ~= nil, '"lightwaves/'..path..'.lua" does not return value')
+        light_wave.id = light_wave.id or path
+        self.light_waves[light_wave.id] = light_wave
+    end
+
+    for _,path,cutscene in Registry.iterScripts("battle/lightbattlecutscenes") do
+        assert(cutscene ~= nil, '"lightbattlecutscenes/'..path..'.lua" does not return value')
+        cutscene.id = cutscene.id or path
+        self.light_battle_cutscenes[cutscene.id] = cutscene
     end
 
     for _,path,light_shop in Registry.iterScripts("lightshops") do
@@ -153,10 +147,325 @@ function lib:createLightEnemy(id, ...)
     end
 end
 
--- Functions
+function lib:getLightWave(id)
+    return self.light_waves[id]
+end
+
+function lib:createLightWave(id, ...)
+    if self.light_waves[id] then
+        return self.light_waves[id](...)
+    else
+        error("Attempt to create non existent light wave \"" .. tostring(id) .. "\"")
+    end
+end
+
+function lib:getLightBattleCutscene(id)
+    return self.light_waves[id]
+end
+
+function lib:createLightBattleCutscene(id, ...)
+    if self.light_waves[id] then
+        return self.light_battle_cutscenes[id](...)
+    else
+        error("Attempt to create non existent light battle cutscene \"" .. tostring(id) .. "\"")
+    end
+end
+
+
+-- INIT
+
+function lib:init()
+    print("oh boy here we go again")
+    print("Loaded Magical Glass 2!")
+
+    self:initRegistry()
+
+    for _,path in ipairs(Utils.getFilesRecursive(self.info.path.."/scripts/init")) do
+        love.filesystem.load(self.info.path .. "/scripts/init/" .. path)()
+    end
+end
+
+function lib:save(data)
+    data.magical_glass_2 = {}
+    data.magical_glass_2["default_battle_system"]       = self.default_battle_system
+    data.magical_glass_2["solo_battles"]                = self.solo_battles
+    data.magical_glass_2["advanced_save_menu"]          = self.advanced_save_menu
+
+    data.magical_glass_2["light_battle_text_shake"]     = self.light_battle_text_shake
+    data.magical_glass_2["light_battle_mercy_messages"] = self.light_battle_mercy_messages
+    data.magical_glass_2["list_item_menu"]              = self.list_item_menu
+
+    data.magical_glass_2["pink_spare"]                  = self.pink_spare
+
+    data.magical_glass_2["always_flee"]                 = self.always_flee
+
+    data.magical_glass_2["__has_dim_box_a"]             = self.__has_dim_box_a
+    data.magical_glass_2["__has_dim_box_b"]             = self.__has_dim_box_b
+
+    data.magical_glass_2["__current_battle_system"]     = self.__current_battle_system
+end
+
+function lib:load(data, is_new_file)
+    if not love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        love.filesystem.write("saves/" .. Mod.info.id .. "/global.json", self:initGlobalSave())
+    end
+
+    if not data.magical_glass_2 then
+        local function getConfigOption(config, default)
+            local option = self:getConfig(config)
+            if option ~= nil then return option else return default end
+        end
+
+        self.default_battle_system          = getConfigOption("defaultBattleSystem", "undertale")
+        self.solo_battles                   = getConfigOption("soloBattles", true)
+        self.advanced_save_menu             = getConfigOption("advancedSaveMenu", true)
+
+        self.light_battle_text_shake        = getConfigOption("lightBattleTextShake", true)
+        self.light_battle_mercy_messages    = getConfigOption("lightBattleMercyMessages", false)
+        self.list_item_menu                 = getConfigOption("lightBattleListItemMenu", false)
+
+        self.pink_spare                     = false
+        self.always_flee                    = false
+
+        self.__has_dim_box_a                = false
+        self.__has_dim_box_b                = false
+
+        self.__current_battle_system        = nil
+        self.__game_overs                   = nil
+        self:setGameOvers(0)
+    else
+        self.default_battle_system          = data.magical_glass_2["default_battle_system"]
+        self.solo_battles                   = data.magical_glass_2["solo_battles"]
+        self.advanced_save_menu             = data.magical_glass_2["advanced_save_menu"]
+
+        self.light_battle_text_shake        = data.magical_glass_2["light_battle_text_shake"]
+        self.light_battle_mercy_messages    = data.magical_glass_2["light_battle_mercy_messages"]
+
+        self.list_item_menu                 = data.magical_glass_2["list_item_menu"]
+
+        self.pink_spare                     = data.magical_glass_2["pink_spare"]
+        self.always_flee                    = data.magical_glass_2["always_flee"]
+
+        self.__has_dim_box_a                = data.magical_glass_2["__has_dim_box_a"]
+        self.__has_dim_box_b                = data.magical_glass_2["__has_dim_box_b"]
+
+        self.__current_battle_system        = data.magical_glass_2["__current_battle_system"]
+        self.__game_overs                   = self:getGameOvers()
+    end
+end
+
+function lib:unload()
+    MagicalGlass = nil
+end
+
+-- EVENTS
+
+function lib:registerDebugOptions(debug)
+    -- Items
+    debug:registerMenu("give_item", "Give Item")
+
+    debug:registerOption("give_item", "Give Dark World Item", "Give a dark world item.", function()
+        debug:enterMenu("dark_give_item", 0)
+    end)
+    debug:registerOption("give_item", "Give Light World Item", "Give a light world item.", function()
+        debug:enterMenu("light_give_item", 0)
+    end)
+
+    debug:registerMenu("dark_give_item", "Give Dark World Item", "search")
+    for id, item_data in pairs(Registry.items) do
+        local item = item_data()
+        if not item.light then
+            debug:registerOption("dark_give_item", item.name or "", item.description, function()
+                Game.inventory:tryGiveItem(item_data())
+            end)
+        end
+    end
+
+    debug:registerMenu("light_give_item", "Give Light World Item", "search")
+    for id, item_data in pairs(Registry.items) do
+        local item = item_data()
+        if item.light then
+            debug:registerOption("light_give_item", item.name or "", item.description, function()
+                Game.inventory:tryGiveItem(item_data())
+            end)
+        end
+    end
+
+    -- Encounters
+    debug:registerMenu("encounter_select", "Encounter Select")
+
+    debug:registerOption("encounter_select", "Start Dark Encounter", "Start a dark encounter.", function()
+        debug:enterMenu("dark_encounter_select", 0)
+    end)
+    debug:registerOption("encounter_select", "Start Light Encounter", "Start a light encounter.", function()
+        debug:enterMenu("light_encounter_select", 0)
+    end)
+
+    debug:registerMenu("dark_encounter_select", "Select Dark Encounter", "search")
+    for id,_ in pairs(Registry.encounters) do
+        debug:registerOption("dark_encounter_select", id, "Start this encounter.", function()
+            Game:encounterDark(id, true, nil, nil, false)
+            debug:closeMenu()
+        end)
+    end
+
+    debug:registerMenu("light_encounter_select", "Select Light Encounter", "search")
+    for id,_ in pairs(self.light_encounters) do
+        if id ~= "_nobody" then
+            debug:registerOption("light_encounter_select", id, "Start this encounter.", function()
+                Game:encounterLight(id, true, nil, nil, true)
+                debug:closeMenu()
+            end)
+        end
+    end
+end
+
+function lib:registerTextCommands(text)
+    text:registerCommand("ut_shake", function(text, node, dry)
+        text.state.ut_shake = node.arguments[1] or 1
+        text.draw_every_frame = true
+    end)
+end
+
+function lib:onDrawText(text, node, state, x, y, scale, font, use_color)
+    if state.ut_shake and state.ut_shake > 0 then
+        state.offset_x = Utils.random(state.ut_shake) - state.ut_shake / 2
+        state.offset_y = Utils.random(state.ut_shake) - state.ut_shake / 2
+    end
+end
+
+-- GLOBAL SAVE
+
+local read = love.filesystem.read
+local write = love.filesystem.write
+
+function lib:initGlobalSave()
+    local data = {}
+
+    data["global"] = {}
+
+    data["files"] = {}
+    for i = 1, 3 do
+        data["files"][i] = {}
+    end
+
+    return JSON.encode(data)
+end
+
+function lib:writeToGlobalSaveFile(key, data, file)
+    file = file or Game.save_id
+    if love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        local global_data = JSON.decode(read("saves/" .. Mod.info.id .. "/global.json"))
+        global_data.files[file][key] = data
+        write("saves/" .. Mod.info.id .. "/global.json", JSON.encode(global_data))
+    end
+end
+
+function lib:writeToGlobalSave(key, data)
+    if love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        local global_data = JSON.decode(read("saves/" .. Mod.info.id .. "/global.json"))
+        global_data.global[key] = data
+        write("saves/" .. Mod.info.id .. "/global.json", JSON.encode(global_data))
+    end
+end
+
+function lib:readFromGlobalSaveFile(key, file)
+    file = file or Game.save_id
+    if love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        local global_data = JSON.decode(read("saves/" .. Mod.info.id .. "/global.json"))
+        return global_data.files[file][key]
+    end
+end
+
+function lib:readFromGlobalSave(key)
+    if love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        local global_data = JSON.decode(read("saves/" .. Mod.info.id .. "/global.json"))
+        return global_data.global[key]
+    end
+end
+
+-- FUNCTIONS
+
+function lib:getConfig(config)
+    return Kristal.getLibConfig(self.info.id, config)
+end
+
+function lib:toggleDimensionalBoxA(active)
+    if active == nil then
+        self.__has_dim_box_a = not self.__has_dim_box_a
+    else
+        self.__has_dim_box_a = active
+    end
+
+    if self.__has_dim_box_a then
+        Game.world:registerCall("Dimensional Box A", function()
+            Assets.playSound("dimbox")
+            Game.lock_movement = true
+    
+            Game.world.timer:after(7/30, function()
+                if Game.world.encountering_enemy then return end
+
+                Game.world:openMenu(LightStorageMenu("items", "box_a"))
+                Game.lock_movement = false
+            end)
+        end)
+    else
+        local index
+        for i, call in ipairs(Game.world.calls) do
+            if call[1] == "Dimensional Box A" then index = i end
+            break
+        end
+        table.remove(Game.world.calls, index)
+    end
+end
+
+function lib:toggleDimensionalBoxB(active)
+    if active == nil then
+        self.__has_dim_box_b = not self.__has_dim_box_b
+    else
+        self.__has_dim_box_b = active
+    end
+
+    if self.__has_dim_box_b then
+        Game.world:registerCall("Dimensional Box B", function()
+            Assets.playSound("dimbox")
+            Game.lock_movement = true
+    
+            Game.world.timer:after(7/30, function()
+                if Game.world.encountering_enemy then return end
+
+                Game.world:openMenu(LightStorageMenu("items", "box_b"))
+                Game.lock_movement = false
+            end)
+        end)
+    else
+        local index
+        for i, call in ipairs(Game.world.calls) do
+            print(i)
+            if call[1] == "Dimensional Box B" then index = i end
+            break
+        end
+        table.remove(Game.world.calls, index)
+    end
+end
+
+function lib:setGameOvers(amount)
+    self.__game_overs = amount
+    self:writeToGlobalSaveFile("game_overs", self.__game_overs)
+end
+
+function lib:getGameOvers()
+    return self:readFromGlobalSaveFile("game_overs")
+end
 
 function lib:getCurrentBattleSystem()
     return self.__current_battle_system
+end
+
+function lib:clearGlobalSave()
+    if love.filesystem.getInfo("saves/" .. Mod.info.id .. "/global.json") then
+        love.filesystem.write("saves/" .. Mod.info.id .. "/global.json", self:initGlobalSave())
+    end
 end
 
 return lib

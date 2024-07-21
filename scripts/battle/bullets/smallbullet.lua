@@ -16,4 +16,9 @@ function SmallBullet:update()
     super.update(self)
 end
 
+function SmallBullet:onYellowShot()
+    self:explode()
+    return true
+end
+
 return SmallBullet

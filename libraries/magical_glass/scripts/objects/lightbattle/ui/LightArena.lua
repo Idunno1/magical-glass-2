@@ -13,8 +13,6 @@ function LightArena:init(x, y, shape)
     self.line_width = 5 -- You must call setShape if you change this.
     self:setShape(shape or {{0, 0}, {565, 0}, {565, 130}, {0, 130}})
 
-    self.init_x = self.x
-    self.init_y = self.y
     self.init_width = self.width
     self.init_height = self.height
 
@@ -22,12 +20,11 @@ function LightArena:init(x, y, shape)
     self.bg_color = {0, 0, 0}
 
     self.sprite = ArenaSprite(self)
-    self.sprite.color = {0, 0, 0}
+    self.sprite.color = {0, 0, 0, 0}
     self.sprite.layer = BATTLE_LAYERS["below_ui"]
     self:addChild(self.sprite)
 
     self.sprite_border = ArenaSprite(self)
-    self.sprite_border:setOrigin(0.5, 1)
     self.sprite_border.background = false
     self.sprite_border.layer = BATTLE_LAYERS["above_bullets"]
     Game.battle:addChild(self.sprite_border)
@@ -36,22 +33,51 @@ function LightArena:init(x, y, shape)
     self.mask.layer = BATTLE_LAYERS["above_ui"]
     self:addChild(self.mask)
 
+    self.target_size = nil
+    self.target_position = nil
+
+    self.target_size_callback = nil
+    self.target_position_callback = nil
+end
+
+function LightArena:disable()
+    self.collidable = false
+    self.active = false
+    self.visible = false
+    self.sprite_border.visible = false
+end
+
+function LightArena:enable()
+    self.collidable = true
+    self.active = true
+    self.visible = true
+    self.sprite_border.visible = true
 end
 
 function LightArena:isResizing()
-
-end
-
-function LightArena:resize(shape)
-
-end
-
-function LightArena:move(x, y, move_soul)
-
+    return not not self.target_size
 end
 
 function LightArena:isMoving()
+    return not not self.target_position
+end
 
+function LightArena:resetSize(after)
+    self:setTargetSize(self.init_width, self.init_height, after)
+end
+
+function LightArena:resetPosition(after)
+    self:setTargetPos(self.init_x, self.init_y, after)
+end
+
+function LightArena:setTargetSize(tw, th, after)
+    self.target_size = {width = tw or self.width, height = th or self.height}
+    self.target_size_callback = after or function() end
+end
+
+function LightArena:setTargetPos(tx, ty, after)
+    self.target_position = {x = tx or self.x, y = ty or self.y}
+    self.target_position_callback = after or function() end
 end
 
 function LightArena:setSize(width, height)
@@ -126,9 +152,69 @@ function LightArena:getRight() local x, y = self:getBottomRight(); return x end
 function LightArena:getTop() local x, y = self:getTopLeft(); return y end
 function LightArena:getBottom() local x, y = self:getBottomRight(); return y end
 
+function LightArena:updateTransition()
+    if self:isResizing() then
+        if self.width ~= self.target_size.width then
+            local new_width = Utils.approach(self.width, self.target_size.width, DTMULT * 30)
+            self:setSize(new_width, self.height)
+        end
+
+        if self.height ~= self.target_size.height then
+            local new_height = Utils.approach(self.height, self.target_size.height, DTMULT * 30)
+            self:setSize(self.width, new_height)
+        end
+
+        if self.width == self.target_size.width and self.height == self.target_size.height then
+            self:setSize(self.target_size.width, self.target_size.height)
+            self.target_size = nil
+
+            if self.target_size_callback then
+                self.target_size_callback()
+                self.target_size_callback = nil
+            end
+        end
+    end
+
+    if self:isMoving() then
+        if self.x ~= self.target_position.x then
+            self.x = Utils.approach(self.x, self.target_position.x, math.ceil(DTMULT * 15))
+        end
+
+        if self.y ~= self.target_position.y then
+            self.y = Utils.approach(self.y, self.target_position.y, math.ceil(DTMULT * 15))
+        end
+
+        if self.x == self.target_position.x and self.y == self.target_position.y then
+            self:setSize(self.width, self.height) -- needs to be called so top, bottom, left, and right work
+
+            self.x = self.target_position.x
+            self.y = self.target_position.y
+
+            self.target_position = nil
+
+            if self.target_position_callback then
+                self.target_position_callback()
+                self.target_position_callback = nil
+            end
+        end
+    end
+end
+
 function LightArena:update()
+    self:updateTransition()
+
+    if not Utils.equal(self.processed_shape, self.shape, true) then
+        self:setShape(self.shape)
+    elseif self.processed_width ~= self.width or self.processed_height ~= self.height then
+        self:setSize(self.width, self.height)
+    end
+
+    local x, y = self:getRelativePos()
+    self.sprite_border:setPosition(math.ceil(x), math.ceil(y)) 
+    
     super.update(self)
 
+    if not Game.battle then return end
     if NOCLIP then return end
 
     local soul = Game.battle.soul
@@ -160,13 +246,6 @@ function LightArena:drawMask()
     self.sprite:drawBackground()
     self.sprite:postDraw()
     love.graphics.pop()
-end
-
-function LightArena:preDraw()
-    super.preDraw(self)
-    self.sprite_border.x = self.x
-    self.sprite_border.y = self.y
-    self.sprite_border.width = self.sprite.width-1
 end
 
 function LightArena:draw()

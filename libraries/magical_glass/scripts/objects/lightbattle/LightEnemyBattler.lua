@@ -10,14 +10,10 @@ function LightEnemyBattler:init(actor, use_overlay)
         self:setActor(actor, use_overlay)
     end
 
+    self.max_health = 100
     self.health = 100
-    self.stats = {
-        health = 100,
-        attack = 1,
-        defense = 0
-    }
-
-    self.stat_buffs = {}
+    self.attack = 1
+    self.defense = 0
 
     -- The base amount of money this enemy gives the player when defeated.
     -- Asociated getter: getMoney (number, rounded)
@@ -38,16 +34,16 @@ function LightEnemyBattler:init(actor, use_overlay)
     -- reaches 100.
     self.spare_points = 0
 
-    -- Should this enemy turn to dust when defeated?
-    self.vaporize_on_defeat = true
+    -- Should this enemy turn to dust and be removed from battle when defeated?
+    self.remove_on_defeat = true
     -- Whether this enemy's dust should be separated by lines instead of pixels.
-    -- Recommeneded for larger enemies.
+    -- Recommended for larger enemies.
     self.large_vapor = false
 
+    -- Whether this enemy runs away instead of turning to dust.
+    self.run_on_defeat = false
     -- Whether this enemy can be frozen.
     self.can_freeze = false
-    -- Whether this enemy can run away when defeated.
-    self.can_run = false
 
     -- Whether this enemy can be selected or not.
     self.selectable = true
@@ -55,18 +51,18 @@ function LightEnemyBattler:init(actor, use_overlay)
     -- Whether this enemy's HP should be shown in ENEMYSELECT and if
     -- an HP gauge will be spawned with the damage numbers
     self.show_health = true
-    -- Whether mercy is disabled for this enemy, like in the weird route Spamton NEO fight.
-    -- This only affects the visual mercy bar.
-    self.disable_mercy = false
     -- Whether the mercy gauge should be shown when mercy is added to this enemy.
     self.show_mercy_gauge = true
-
+    -- Whether mercy is disabled for this enemy, like in the weird route Spamton NEO fight.
+    -- This only affects the visual mercy bar in ENEMYSELECT.
+    self.disable_mercy = false
+  
     -- The width of the gauge that appears when this enemy is damaged.
     -- Associated getter: getGaugeWidth (number)
     self.gauge_width = 100
-    -- The offset of this enemy's damage popups.
+    -- The offset of this enemy's damage popups. The first value is the x, and the second is the y.
     -- Associated getter: getDamageOffset (table)
-    self.damage_offset = {5, -40}
+    self.damage_offset = {5, -10}
 
     -- A table of strings of wave IDs that this enemy can use.
     -- Associated getter: getNextWaves (string)
@@ -80,11 +76,11 @@ function LightEnemyBattler:init(actor, use_overlay)
     
     -- The text that gets displayed when the Check ACT is used, prefixed with "ENEMY NAME - "
     -- Associated getter: getCheckText (string or table)
-    self.check = "Wake up and taste the [color:red]\npain"
+    self.check = "Time to wake up and \nsmell the [color:red]pain[color:reset]."
 
     -- A table of strings containing flavor text that can be displayed in ACTIONSELECT when
     -- this enemy is active.
-    -- Associated getter: getEncounterText (string or table)
+    -- Associated getter: getEncounterText (string or table{string})
     self.text = {}
 
     -- A table of strings or just a string containing the message that is displayed in
@@ -100,16 +96,18 @@ function LightEnemyBattler:init(actor, use_overlay)
     -- Associated getter: getSparableText (string or table)
     self.spareable_text = nil
 
+    -- When this enemy is below this percentage of health, they will become sparable.
+    self.spare_percentage = 1/3
     -- When this enemy is below this percentage of health, their tired text will be displayed.
     self.tired_percentage = 0
     -- When this enemy is below this percentage of health, their low health text will be displayed.
     self.low_health_percentage = 0.2
 
     -- The sound that plays when this enemy is hit by an attack.
-    -- Associated getter: getDamageSound (string or userdata)
+    -- Associated getter: getDamageSound (string)
     self.damage_sound = "damage"
     -- The sound that plays about a second after this enemy is hit by an attack.
-    -- Associated getter: getDamageVoice (string or userdata)
+    -- Associated getter: getDamageVoice (string)
     self.damage_voice = nil
     -- Display 0 instead of miss when attacked.
     self.display_damage_on_miss = false
@@ -124,12 +122,11 @@ function LightEnemyBattler:init(actor, use_overlay)
     -- The offset for this enemy's speech bubble.
     self.dialogue_offset = {0, 0}
     -- Whether the speech bubble should be flipped horizontally.
-    self.flip_dialogue = true
+    self.flip_dialogue = false
 
     -- A string displayed next to the enemy's name in ENEMYSELECT.
     -- setTired sets this to "(Tired)" when it's true, and clears it when it's false.
     self.comment = ""
-
 
     -- The acts that this enemy has.
     -- It is HEAVILY recommended to use the registerAct functions instead of directly
@@ -142,12 +139,19 @@ function LightEnemyBattler:init(actor, use_overlay)
         }
     }
 
+    self.identifier = nil
+    self.encounter = nil
+
+    self.bubble = nil
+
     self.current_target = nil
 
     self.hurt_timer = 0
-    self.defeated = false
 
-    self.encounter = nil
+    self.popups = {}
+    self.gauge = nil
+
+    self.defeated = false
 
     -- How this enemy was removed from battle. If they're still active, this is nil.
     -- This is an internal variable. Do not edit this unless you know what you're doing.
@@ -160,17 +164,10 @@ function LightEnemyBattler:getName() return self.name end
 function LightEnemyBattler:getMoney() return self.money end
 function LightEnemyBattler:getEXP() return self.exp end
 
-function LightEnemyBattler:getHealth() return self.health end
-function LightEnemyBattler:getStats() return self.stats end
-function LightEnemyBattler:getStat(name, default)
-    return (self:getStats()[name] or (default or 0))
-end
-function LightEnemyBattler:getStatBuffs() return self.stat_buffs end
-function LightEnemyBattler:getStatBuff(stat)
-    return self:getStatBuffs()[stat] or 0
-end
-
 function LightEnemyBattler:getCheckText() return self.check end
+
+function LightEnemyBattler:getGaugeWidth() return self.gauge_width end
+function LightEnemyBattler:getDamageOffset() return Utils.unpack(self.damage_offset) end
 
 function LightEnemyBattler:getEncounterText()
     local has_spareable_text = self.spareable_text and self:canSpare()
@@ -182,7 +179,6 @@ function LightEnemyBattler:getEncounterText()
 
     if self.low_health_text and self.health <= (self.max_health * self.low_health_percentage) then
         return self.low_health_text
-
     elseif self.tired_text and self.tired then
         return self.tired_text
 
@@ -204,6 +200,15 @@ end
 function LightEnemyBattler:getXAction(battler) return "Standard" end
 function LightEnemyBattler:isXActionShort(battler) return false end
 
+function LightEnemyBattler:getEnemyDialogue()
+    if self.dialogue_override then
+        local dialogue = self.dialogue_override
+        self.dialogue_override = nil
+        return dialogue
+    end
+    return Utils.pick(self.dialogue)
+end
+
 function LightEnemyBattler:getNextWaves()
     if self.wave_override then
         local wave = self.wave_override
@@ -213,46 +218,32 @@ function LightEnemyBattler:getNextWaves()
     return self.waves
 end
 
-function LightEnemyBattler:getDamageSound()
-    if self.damage_sound then
-        if type(self.damage_sound) == "string" then
-            -- Load and return the sound if it's a string.
-            return Assets.newSound(self.damage_sound)
-        elseif type(self.damage_sound) == "userdata" then
-            -- Just return if if it's already loaded, and is thus userdata.
-            return self.damage_sound
-        end
-    else
-        -- Otherwise, return nil to signify that no sound should be played.
-        return nil
+function LightEnemyBattler:getNextMenuWaves()
+    if self.menu_wave_override then
+        local wave = self.menu_wave_override
+        return {wave}
     end
+    return self.menu_waves
+end
+
+function LightEnemyBattler:getDamageSound()
+    return self.damage_sound
 end
 
 function LightEnemyBattler:getDamageVoice()
-    if self.damage_voice then
-        if type(self.damage_voice) == "string" then
-            return Assets.newSound(self.damage_voice)
-        elseif type(self.damage_voice) == "userdata" then
-            return self.damage_voice
-        end
-    else
-        return nil
-    end
+    return self.damage_voice
+end
+
+function LightEnemyBattler:getAttackTension(points)
+    -- In Deltarune, this is always 10*2.5, except for JEVIL where it's 15*2.5
+    return points / 25
 end
 
 -- Callbacks
 
 function LightEnemyBattler:onCheck(battler) end
 
-function LightEnemyBattler:onActStart(battler, name)
-    battler:setAnimation("battle/act")
-    local action = Game.battle:getCurrentAction()
-    if action.party then
-        for _,party_id in ipairs(action.party) do
-            Game.battle:getPartyBattler(party_id):setAnimation("battle/act")
-        end
-    end
-end
+function LightEnemyBattler:onActStart(battler, name) end
 function LightEnemyBattler:onAct(battler, name)
     if name == "Check" then
         self:onCheck(battler)
@@ -275,6 +266,16 @@ end
 function LightEnemyBattler:onTurnStart() end
 function LightEnemyBattler:onTurnEnd() end
 
+function LightEnemyBattler:onMercy(battler)
+    if self:canSpare() then
+        self:spare()
+        return true
+    else
+        self:addMercy(self.spare_points)
+        return false
+    end
+end
+
 function LightEnemyBattler:onSpareable() end
 function LightEnemyBattler:onSpared()
     if self.actor.use_light_battler_sprite then
@@ -289,8 +290,10 @@ function LightEnemyBattler:onSpared()
 end
 
 function LightEnemyBattler:onHurt(damage, battler)
+    battler.chara:onLightBattleAttackHit(self, damage)
+
     self:toggleOverlay(true)
-    if self.actor.use_light_battler_sprite then
+    if self.actor.light_battle_sprite then
         if not self:getActiveSprite():setAnimation("lightbattle_hurt") then
             self:toggleOverlay(false)
         end
@@ -320,17 +323,17 @@ end
 
 function LightEnemyBattler:onHurtEnd()
     self:getActiveSprite():stopShake()
-    if self.health > 0 or not self.vaporize_on_defeat then
+    if self.health > 0 or not self.remove_on_defeat then
         self:toggleOverlay(false, true)
     end
 end
 
 function LightEnemyBattler:onDodge(battler, attacked) end
 
-function LightEnemyBattler:onDefeatSpared()
+function LightEnemyBattler:onDefeatSpared(pacified)
     self:toggleOverlay(true)
-    self.alpha = 0.5
-    Game.battle:playVaporizedSound()
+    self:getActiveSprite().alpha = 0.5
+    Assets.playSound("vaporized")
 
     for i = 0, 15 do
         local x = ((Utils.random((self.width / 2)) + (self.width / 4))) - 8
@@ -338,66 +341,56 @@ function LightEnemyBattler:onDefeatSpared()
 
         local sx, sy = self:getRelativePos(x, y)
 
-        local dust = SpareDust(sx, sy)
+        local dust = SpareDust(sx, sy, ((8 + x)) / (self.width / 2), ((8 + y)) / (self.height / 2))
         self.parent:addChild(dust)
-
-        dust.rightside = ((8 + x)) / (self.width / 2)
-        dust.topside = ((8 + y)) / (self.height / 2)
-
-        Game.battle.timer:after(1/30, function()
-            dust:spread()
-        end)
-
-        dust.layer = BATTLE_LAYERS["above_ui"] + 3
     end
 end
 
 function LightEnemyBattler:onDefeat(damage, battler)
-    if self.exit_on_defeat then
-        if self.actor.use_light_battler_sprite then
-            self:toggleOverlay(true)
+    self.hurt_timer = -1
+    if self.remove_on_defeat then
+        if self.run_on_defeat then
+            self:onDefeatRun(damage, battler)
+        else
+            self:onDefeatVaporized(damage, battler)
         end
-        Game.battle.timer:after(self.hurt_timer, function()
-            if self.actor.use_light_battler_sprite then
-                self:toggleOverlay(true)
-            end
-            if self.can_die then
-                if self.ut_death then
-                    self:onDefeatVaporized(damage, battler)
-                else
-                    self:onDefeatFatal(damage, battler)
-                end
-            else
-                self:onDefeatRun(damage, battler)
-            end
-        end)
-    elseif not self.actor.use_light_battler_sprite then
-        self.sprite:setAnimation("defeat")
+    else
+        self.done_state = "DEFEATED"
+        self:toggleOverlay(true)
+        if self.actor:getAnimation("lightbattle_defeat") then
+            sprite:setAnimation("lightbattle_defeat")
+        else
+            sprite:setAnimation("lightbattle_hurt")
+        end
     end
 end
 
 function LightEnemyBattler:onDefeatVaporized(damage, battler)
+    self:toggleOverlay(true)
+
     self.hurt_timer = -1
     self.defeated = true
 
-    Assets.playSound("vaporized", 1.2)
+    Assets.playSound("vaporized")
 
     local sprite = self:getActiveSprite()
-
-    sprite.visible = false
-    sprite:stopShake()
-
-    local death_x, death_y = sprite:getRelativePos(0, 0, self)
-    local death
-    if self.large_dust then
-        death = DustEffectLarge(sprite:getTexture(), death_x, death_y, function() self:remove() end)
+    if self.actor:getAnimation("lightbattle_defeat") then
+        sprite:setAnimation("lightbattle_defeat")
     else
-        death = DustEffect(sprite:getTexture(), death_x, death_y, function() self:remove() end)
+        sprite:setAnimation("lightbattle_hurt")
+    end
+    sprite.visible = false
+
+    local vapor
+    if self.large_vapor then
+        vapor = DustEffectLarge(sprite:getTexture(), sprite:getRelativePos(0, 0, self))
+    else
+        vapor = DustEffect(sprite:getTexture(), sprite:getRelativePos(0, 0, self))
     end
      
-    death:setColor(sprite:getDrawColor())
-    death:setScale(sprite:getScale())
-    self:addChild(death)
+    vapor:setColor(sprite:getDrawColor())
+    vapor:setScale(sprite:getScale())
+    self:addChild(vapor)
 
     self:defeat("KILLED", true)
 end
@@ -417,7 +410,7 @@ function LightEnemyBattler:onDefeatRun(damage, battler)
     Game.battle.timer:after(15/30, function()
         sweat:remove()
         -- maybe don't hook actorsprite this time?
-        self:getActiveSprite().run_away_light = true
+        -- self:getActiveSprite().run_away_light = true
 
         Game.battle.timer:after(15/30, function()
             self:remove()
@@ -429,6 +422,33 @@ end
 
 -- Functions
 
+function LightEnemyBattler:setActor(actor, use_overlay)
+    if type(actor) == "string" then
+        self.actor = Registry.createActor(actor)
+    else
+        self.actor = actor
+    end
+
+    self.width = self.actor:getWidth()
+    self.height = self.actor:getHeight()
+
+    if self.sprite         then self:removeChild(self.sprite)         end
+    if self.overlay_sprite then self:removeChild(self.overlay_sprite) end
+
+    if self.actor.light_battle_sprite then
+        self.sprite = self.actor:createLightBattleSprite()
+    else
+        self.sprite = self.actor:createSprite()
+    end
+    self:addChild(self.sprite)
+
+    if use_overlay ~= false then
+        self.overlay_sprite = self.actor:createSprite()
+        self.overlay_sprite.visible = false
+        self:addChild(self.overlay_sprite)
+    end
+end
+
 function LightEnemyBattler:setTired(bool)
     self.tired = bool
     if self.tired then
@@ -439,11 +459,28 @@ function LightEnemyBattler:setTired(bool)
 end
 
 function LightEnemyBattler:addMercy(amount) 
-    -- Doesn't deltarune show a miss if you spare an enemy with >= 100 mercy?
     if (amount >= 0 and self.mercy >= 100) or (amount < 0 and self.mercy <= 0) then
         -- This enemy either has full mercy or 0 mercy and some is being removed. 
         -- Regardless, nothing should happen.
         return
+    end
+
+    if MagicalGlass.light_battle_mercy_messages and self.show_mercy_gauge then
+        if amount == 0 then
+            self:lightStatusMessage("msg", "miss", {color = COLORS.yellow, dont_animate = true})
+        else
+            if amount > 0 then
+                local pitch = 0.8
+                if amount < 99 then pitch = 1 end
+                if amount <= 50 then pitch = 1.2 end
+                if amount <= 25 then pitch = 1.4 end
+
+                local sound = Assets.playSound("mercyadd", 0.8)
+                sound:setPitch(pitch)
+            end
+
+            self:lightStatusMessage("mercy", amount)
+        end
     end
     
     self.mercy = self.mercy + amount
@@ -461,24 +498,39 @@ function LightEnemyBattler:addMercy(amount)
             self:spare(false)
         end
     end
+end
 
-    if MagicalGlass.light_battle_mercy_messages and self.show_mercy_gauge then
-        if amount == 0 then
-            self:statusMessageLight("msg", "miss", COLORS.yellow)
-        else
-            if amount > 0 then
-                local pitch = 0.8
-                if amount < 99 then pitch = 1 end
-                if amount <= 50 then pitch = 1.2 end
-                if amount <= 25 then pitch = 1.4 end
+function LightEnemyBattler:spawnSpeechBubble(text, options)
+    options = options or {}
+    options["flip"] = options["flip"] or self.flip_dialogue
 
-                local src = Assets.playSound("mercyadd", 0.8)
-                src:setPitch(pitch)
-            end
-
-            self:statusMessageLight("mercy", amount)
-        end
+    if not options["style"] and self.dialogue_bubble then
+        options["style"] = self.dialogue_bubble
     end
+
+    local bubble
+    local x, y
+    if options["flip"] then
+        x, y = self.sprite:getRelativePos(self.actor:getWidth(), self.actor:getHeight() / 2, Game.battle)
+        options = Utils.merge({right = true}, options)
+    else
+        x, y = self.sprite:getRelativePos(0, self.actor:getHeight() / 2, Game.battle)
+    end
+    x, y = x - self.dialogue_offset[1], y + self.dialogue_offset[2]
+    bubble = UnderSpeechBubble(text, x, y, options, self)
+
+    self.bubble = bubble
+    self:onBubbleSpawn(bubble)
+    bubble:setCallback(function()
+        self:onBubbleRemove(bubble)
+        bubble:remove()
+        self.bubble = nil
+    end)
+    bubble:setLineCallback(function(index)
+        Game.battle.textbox_timer = 3 * 30
+    end)
+    Game.battle:addChild(bubble)
+    return bubble
 end
 
 function LightEnemyBattler:registerAct(name, description, party, tp, highlight, icons)
@@ -498,7 +550,6 @@ function LightEnemyBattler:registerAct(name, description, party, tp, highlight, 
         ["description"] = description,
         ["party"] = party,
         ["tp"] = tp or 0,
-        ["highlight"] = highlight,
         ["short"] = false,
         ["icons"] = icons
     }
@@ -523,7 +574,6 @@ function LightEnemyBattler:registerShortAct(name, description, party, tp, highli
         ["description"] = description,
         ["party"] = party,
         ["tp"] = tp or 0,
-        ["highlight"] = highlight,
         ["short"] = true,
         ["icons"] = icons
     }
@@ -548,7 +598,6 @@ function LightEnemyBattler:registerActFor(char, name, description, party, tp, hi
         ["description"] = description,
         ["party"] = party,
         ["tp"] = tp or 0,
-        ["highlight"] = highlight,
         ["short"] = false,
         ["icons"] = icons
     }
@@ -572,7 +621,6 @@ function LightEnemyBattler:registerShortActFor(char, name, description, party, t
         ["description"] = description,
         ["party"] = party,
         ["tp"] = tp or 0,
-        ["highlight"] = highlight,
         ["short"] = true,
         ["icons"] = icons
     }
@@ -591,7 +639,11 @@ end
 function LightEnemyBattler:getNameColors()
     local result = {}
     if self:canSpare() then
-        table.insert(result, {1, 1, 0})
+        if MagicalGlass.pink_spare then
+            table.insert(result, MagicalGlass.PALETTE["pink_spare"])
+        else
+            table.insert(result, {1, 1, 0})
+        end
     end
     if self.tired then
         table.insert(result, {0, 0.7, 1})
@@ -603,43 +655,56 @@ function LightEnemyBattler:getTarget()
     return Game.battle:randomTarget()
 end
 
-function LightEnemyBattler:hurt(amount, battler, on_defeat, color, show_status, attacked)
-    if attacked ~= false then
-        attacked = true
+function LightEnemyBattler:selectWave()
+    local waves = self:getNextWaves()
+    if waves and #waves > 0 then
+        local wave = Utils.pick(waves)
+        self.selected_wave = wave
+        return wave
     end
-    local message
-    if amount <= 0 then
-        if not self.display_damage_on_miss or not attacked then
-            message = self:lightStatusMessage("msg", "miss", color or (battler and {battler.chara:getLightMissColor()}))
+end
+
+function LightEnemyBattler:selectMenuWave()
+    local waves = self:getNextMenuWaves()
+    if waves and #waves > 0 then
+        local wave = Utils.pick(waves)
+        self.selected_menu_wave = wave
+        return wave
+    end
+end
+
+function LightEnemyBattler:getAttackDamage(battler, attack, damage)
+    if damage and damage ~= 0 then return damage end
+
+    if attack:isMultibolt() then
+        local total_damage
+        local crit = false
+
+        total_damage = (battler.chara:getStat("attack") - self.defense)
+        total_damage = total_damage * ((attack.score / 160) * (4 / attack.count))
+        total_damage = Utils.round(total_damage) + Utils.random(0, 2, 1)
+
+        if attack.score > (400 * (attack.count / 4)) then
+            crit = true
+        end
+
+        return total_damage, crit
+    else
+        local total_damage = (battler.chara:getStat("attack") - self.defense) + Utils.random(0, 2, 1)
+
+        if attack.score <= 12 then
+            total_damage = Utils.round(total_damage * 2.2)
         else
-            message = self:lightStatusMessage("damage", 0, color or (battler and {battler.chara:getLightDamageColor()}))
-        end
-        if message and (anim and anim ~= nil) then
-            message:resetPhysics()
-        end
-        if attacked then
-            self.hurt_timer = 1
+            total_damage = Utils.round((total_damage * attack.stretch) * 2)
         end
 
-        self:onDodge(battler, attacked)
-        return
+        return total_damage
     end
-
-    message = self:lightStatusMessage("damage", amount, color or (battler and {battler.chara:getLightDamageColor()}))
-    if message and (anim and anim ~= nil) then
-        message:resetPhysics()
-    end
-    self.health = self.health - amount
-
-    self.hurt_timer = 1
-    self:onHurt(amount, battler)
-
-    self:checkHealth(on_defeat, amount, battler)
 end
 
 function LightEnemyBattler:heal(amount)
     Assets.stopAndPlaySound("power")
-    self:lightStatusMessage("damage", "+" .. amount, {0, 1, 0})
+    self:lightStatusMessage("heal", amount)
 
     self.health = self.health + amount
 
@@ -648,10 +713,37 @@ function LightEnemyBattler:heal(amount)
     end
 end
 
+function LightEnemyBattler:hurt(amount, battler, attacked, on_defeat, color, show_status)
+    if amount <= 0 then
+        if attacked then self.hurt_timer = 1 end
+        if show_status or show_status == nil then
+            self:lightStatusMessage("msg", "miss", {dont_animate = not attacked})
+        end
+        self:onDodge(battler, attacked)
+        return
+    end
+
+    if show_status or show_status == nil then
+        self:lightStatusMessage("damage", amount)
+    end
+
+    self.health = self.health - amount
+
+    if amount > 0 then
+        self.hurt_timer = 1
+        self:onHurt(amount, battler)
+    end
+
+    self:checkHealth(on_defeat, amount, battler)
+end
+
 function LightEnemyBattler:checkHealth(on_defeat, amount, battler)
     -- on_defeat is optional
     if self.health <= 0 then
         self.health = 0
+        if self.remove_on_defeat then
+            self.done_state = "FALLENDOWN"
+        end
 
         if not self.defeated then
             if on_defeat then
@@ -667,12 +759,12 @@ function LightEnemyBattler:canSpare()
     return self.mercy >= 100
 end
 
-function LightEnemyBattler:spare(pacify)
-    if self.vaporize_on_defeat then
-        self:onDefeatSpared()
+function LightEnemyBattler:spare(pacified)
+    if self.remove_on_defeat then
+        self:onDefeatSpared(pacified)
     end
 
-    self:defeat(pacify and "PACIFIED" or "SPARED", false)
+    self:defeat(pacified and "PACIFIED" or "SPARED", false)
     self:onSpared()
 end
 
@@ -703,11 +795,8 @@ function LightEnemyBattler:freeze()
 
     Game.battle.timer:tween(20/30, sprite, {freeze_progress = 1})
 
-    if Game:isLight() then
-        Game.battle.money = Game.battle.money + 2
-    else
-        Game.battle.money = Game.battle.money + 24
-    end
+    Game.battle.money = Game.battle.money + 24
+    
     self:defeat("FROZEN", true)
 end
 
@@ -719,7 +808,7 @@ function LightEnemyBattler:defeat(reason, violent)
         if self.done_state == "KILLED" or self.done_state == "FROZEN" then
             -- do this better
             -- MagicalGlassLib.kills = MagicalGlassLib.kills + 1
-            Game.battle.xp = Game.battle.xp + self:getEXP()
+            Game.battle.exp = Game.battle.exp + self:getEXP()
         end
     end
     
@@ -728,11 +817,15 @@ function LightEnemyBattler:defeat(reason, violent)
 end
 
 function LightEnemyBattler:forceDefeat(amount, battler)
-    self:onDefeat(amount, battler)
+    self.done_state = "FALLENDOWN"
 end
 
 function LightEnemyBattler:statusMessage(...)
     return super.statusMessage(self, self.width/2, self.height/2, ...)
+end
+
+function LightEnemyBattler:lightStatusMessage(...)
+    return super.lightStatusMessage(self, self.width/2, self.height/2, ...)
 end
 
 function LightEnemyBattler:recruitMessage(...)
@@ -752,6 +845,18 @@ function LightEnemyBattler:update()
         end
     end
 
+    if self.sprite and self.sprite:includes(LightEnemySprite) then
+        if not self.done_state and self.hurt_timer == 0 then
+            for id, part in pairs(self.sprite.sprite_parts) do
+                part.timer = part.timer + DTMULT
+            end
+        end
+    end
+
+    if self.done_state == "FALLENDOWN" and self.hurt_timer <= 0 then
+        self:onDefeat()
+    end
+
     super.update(self)
 end
 
@@ -764,15 +869,15 @@ function LightEnemyBattler:draw()
 end
 
 function LightEnemyBattler:setFlag(flag, value)
-    Game:setFlag("light_enemy#"..self.id..":"..flag, value)
+    Game:setFlag("lw_enemy#" .. self.id .. ":" .. flag, value)
 end
 
 function LightEnemyBattler:getFlag(flag, default)
-    return Game:getFlag("light_enemy#"..self.id..":"..flag, default)
+    return Game:getFlag("lw_enemy#" .. self.id .. ":" .. flag, default)
 end
 
 function LightEnemyBattler:addFlag(flag, amount)
-    return Game:addFlag("light_enemy#"..self.id..":"..flag, amount)
+    return Game:addFlag("lw_enemy#" .. self.id .. ":" .. flag, amount)
 end
 
 function LightEnemyBattler:canDeepCopy()

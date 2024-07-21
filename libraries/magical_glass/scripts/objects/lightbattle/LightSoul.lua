@@ -46,16 +46,10 @@ function LightSoul:init(x, y, color, options)
     self.graze_sprite.graze_scale = self.graze_size_factor
     self:addChild(self.graze_sprite)
 
-    self.graze_collider = CircleCollider(self, 0, 0, 25 * self.graze_size_factor)
+    self.graze_collider = CircleCollider(self, 0, 0, 20 * self.graze_size_factor)
     self.grazing = options["enable_grazing"] or false
     self.graze_collider.collidable = self.grazing
 
-    self.original_x = x
-    self.original_y = y
-    self.target_x = x
-    self.target_y = y
-    self.timer = 0
-    self.transitioning = false
     self.speed = 4
 
     self.inv_timer = 0
@@ -77,8 +71,6 @@ function LightSoul:init(x, y, color, options)
     self.noclip = false
     self.slope_correction = true
 
-    self.transition_destroy = false
-
     self.shard_x_table = {-2, 0, 2, 8, 10, 12}
     self.shard_y_table = {0, 3, 6}
 
@@ -99,9 +91,7 @@ end
 function LightSoul:onDamage(bullet, amount)
     for _,party in ipairs(Game.battle.party) do
         for _,equip in ipairs(party.chara:getEquipment()) do
-            if equip.applyInvBonus then
-                self.inv_timer = equip:applyInvBonus(self.inv_timer)
-            end
+            self.inv_timer = equip:applyInvBonus(self.inv_timer)
         end
     end
 end
@@ -121,20 +111,16 @@ end
 
 -- Functions
 
-function LightSoul:startTransition(temp_layer, scale, origin)
-    self.layer = temp_layer or (Game.battle.fader.layer + 2)
-
-    self.sprite:set(self.transition_sprite)
+function LightSoul:startTransition(scale, origin)
+    self.sprite:setSprite(self.transition_sprite)
     self.sprite:setScale(scale or 2)
     self.sprite:setOrigin(origin or 0.5)
 end
 
-function LightSoul:finishTransition()
-    self.layer = BATTLE_LAYERS["soul"]
-
-    self.sprite:set(self.default_sprite)
-    self:setScale(1)
-    self:setScale(0.5)
+function LightSoul:reset()
+    self.sprite:setSprite(self.default_sprite)
+    self.sprite:setScale(1)
+    self.sprite:setOrigin(0.5)
 end
 
 function LightSoul:toggle(active)
@@ -153,6 +139,7 @@ function LightSoul:toggleGrazing(active)
     else
         self.grazing = active
     end
+    self.graze_collider.collidable = self.grazing
 end
 
 function LightSoul:getExactPosition(x, y)
@@ -419,7 +406,7 @@ function LightSoul:update()
         self:onCollide(bullet)
     end
 
-    if self.inv_timer > 0 then -- 
+    if self.inv_timer > 0 then
         self.inv_flash_timer = self.inv_flash_timer + DT
         local amt = math.floor(self.inv_flash_timer / (2/30)) -- flashing is faster in ut
         if (amt % 2) == 1 then

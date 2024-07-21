@@ -1,6 +1,6 @@
 local LightPartyBattler, super = Class(Object, "LightPartyBattler")
 
--- Doesn't inherit from LightBattler due to not needing any visuals.
+-- Doesn't inherit from Battler due to not needing any visuals.
 
 function LightPartyBattler:init(chara)
     super.init(self)
@@ -21,11 +21,15 @@ function LightPartyBattler:init(chara)
     self.inv_bonus = 0
 end
 
+function LightPartyBattler:isActive()
+    return not self.is_down
+end
+
 function LightPartyBattler:canTarget()
     return (not self.is_down)
 end
 
-function LightPartyBattler:calculateDamage(amount, min, cap)
+function LightPartyBattler:calculateDamage(amount, min, max)
     local def = self.chara:getStat("defense")
     local max_hp = self.chara:getStat("health")
     for i = 21, math.min(max_hp, 99) do
@@ -34,16 +38,8 @@ function LightPartyBattler:calculateDamage(amount, min, cap)
         end
     end
     amount = Utils.round((amount - def) / 5)
-    
-    if min and amount < min then
-        amount = min
-    end
 
-    if cap and amount > cap then
-        amount = cap
-    end
-
-    return math.max(amount, 1)
+    return Utils.clamp(amount, min or 1, max or math.huge)
 end
 
 -- Why
@@ -124,8 +120,8 @@ function LightPartyBattler:removeHealth(amount)
     self:checkHealth()
 end
 
-function LightPartyBattler:heal(amount, show_up, sound)
-    if sound then
+function LightPartyBattler:heal(amount, sound)
+    if sound ~= nil and sound == false then
         Assets.stopAndPlaySound("power")
     end
 
@@ -144,7 +140,6 @@ end
 
 function LightPartyBattler:down()
     self.is_down = true
-    self.sleeping = false
     if self.action then
         Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id))
     end
@@ -187,7 +182,8 @@ function LightPartyBattler:update()
 end
 
 function LightPartyBattler:updateKarma()
-    if Game.battle.encounter:isKarmaEnabled() then
+    -- maybe have karma be controlled by battlers?
+    if Game.battle.encounter.karma then
         self.karma = Utils.clamp(self.karma, 0, 40)
 
         if self.karma >= self.chara:getHealth() and self.chara:getHealth() > 0 then
@@ -201,9 +197,7 @@ function LightPartyBattler:updateKarma()
                 self.inv_bonus = 0
 
                 for _,equip in ipairs(self.chara:getEquipment()) do
-                    if equip.applyInvBonus then
-                        self.inv_bonus = equip:applyInvBonus(self.inv_bonus)
-                    end
+                    self.inv_bonus = equip:applyInvBonus(self.inv_bonus)
                 end
                 if self.inv_bonus >= 15/30 then
                     self.karma_bonus = Utils.pick({0, 1})

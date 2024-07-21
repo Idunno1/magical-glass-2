@@ -1,0 +1,10 @@
+{
+    "id": "lightbluesoul",
+    "authors": [
+        "Sam Deluxe"
+    ],
+    "version": "1.0.0",
+    "dependencies": [
+        "magical-glass"
+    ]
+}
