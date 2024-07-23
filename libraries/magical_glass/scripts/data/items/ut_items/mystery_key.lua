@@ -5,7 +5,9 @@ function item:init()
 
     -- Display name
     self.name = "Mystery Key"
+    -- Name displayed in the normal item select menu
     self.short_name = "MystryKey"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Key"
 
     -- Item type (item, key, weapon, armor)
@@ -28,15 +30,6 @@ function item:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
-    
-end
-
-function item:onLightBattleSelect(user, target)
-    return false
 end
 
 function item:onWorldUse()
@@ -47,6 +40,14 @@ end
 function item:onToss()
     Game.world:showText("* The Mystery Key was\nthrown away.")
     return true
+end
+
+function item:onLightBattleSelect(user, target)
+    return false
+end
+
+function item:onLightBattleUse(user, target)
+    Game.battle:battleText("* You used the Mystery Key.[wait:10]\n* But nothing happened.")
 end
 
 return item

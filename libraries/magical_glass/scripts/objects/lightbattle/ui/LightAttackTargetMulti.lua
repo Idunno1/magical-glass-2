@@ -78,7 +78,7 @@ function LightAttackTargetMulti:getClosestGroups()
 
     for _,group in ipairs(self.bolt_groups) do
         if not group.attacked then
-            distance = Utils.round(math.abs(group:getExactDistance()))
+            distance = Utils.round(math.abs(group:getDistance()))
             if not closest then
                 closest = distance
                 table.insert(closest_groups, group)

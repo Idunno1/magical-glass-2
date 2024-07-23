@@ -10,6 +10,9 @@ function BasicAttackAnim:init(x, y, texture, stretch, options)
     self.attack_texture = texture or "effects/attack/strike"
 
     self.stretch = stretch
+    if not MagicalGlass.solo_battles then
+        self.stretch = nil
+    end
 
     self.attack_sound = options["sound"] or "laz_c"
     self.attack_sound_pitch = options["sound_pitch"] or 1

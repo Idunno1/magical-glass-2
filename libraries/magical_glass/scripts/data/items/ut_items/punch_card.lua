@@ -5,6 +5,7 @@ function item:init()
 
     -- Display name
     self.name = "Punch Card"
+    -- Name displayed in the normal item select menu
     self.short_name = "PunchCard"
 
     -- Item type (item, key, weapon, armor)
@@ -27,28 +28,9 @@ function item:init()
     }
 
     -- Consumable target mode (ally, party, enemy, enemies, or none)
-    self.target = "ally"
+    self.target = "none"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
-    
-end
-
-function item:getATIncrease(target)
-    local at = 6
-    if target.chara:getStat("attack") > 18 then
-        at = 5
-    elseif target.chara:getStat("attack") > 23 then
-        at = 4
-    elseif target.chara:getStat("attack") > 26 then
-        at = 3
-    elseif target.chara:getStat("attack") > 28 then
-        at = 2
-    end
-    return at
 end
 
 function item:onWorldUse(target)
@@ -59,28 +41,40 @@ function item:onWorldUse(target)
     return false
 end
 
+function item:getATIncrease(battler)
+    if battler.chara:getStat("attack") > 18 then
+        return 5
+    elseif battler.chara:getStat("attack") > 23 then
+        return 4
+    elseif battler.chara:getStat("attack") > 26 then
+        return 3
+    elseif battler.chara:getStat("attack") > 28 then
+        return 2
+    end
+    return 6
+end
+
 function item:getLightBattleText(user, target)
-    if Utils.containsValue(target.chara:getWeapon().tags, "punch") then
-        if target.chara.you then
+    if user.chara:getWeapon():hasTag("punch") then
+        if user.chara.you then
             return {
                 "* OOOORAAAAA!!![wait:10]\n* You rip up the punch card!",
-                "* Your hands are burning![wait:10]\n* AT increased by "..self:getATIncrease(target).."!"
+                "* Your hands are burning![wait:10]\n* AT increased by "..self:getATIncrease(user).."!"
             }
         else
             return {
-                "* OOOORAAAAA!!![wait:10]\n* "..target.chara:getName().." rips up the punch card!",
-                "* "..target.chara:getName().."'s hands are burning![wait:10]\n* AT increased by "..self:getATIncrease(target).."!"
+                "* OOOORAAAAA!!![wait:10]\n* "..user.chara:getName().." rips up the punch card!\n* AT increased by "..self:getATIncrease(user).."!"
             }
         end
     else
-        if target.chara.you then
+        if user.chara.you then
             return {
                 "* OOOORAAAAA!!![wait:10]\n* You rip up the punch card!",
                 "* But nothing happened."
             }
         else
             return {
-                "* OOOORAAAAA!!![wait:10]\n* "..target.chara:getName().." rips up the punch card!",
+                "* OOOORAAAAA!!![wait:10]\n* "..user.chara:getName().." rips up the punch card!",
                 "* But nothing happened."
             }
         end
@@ -88,11 +82,11 @@ function item:getLightBattleText(user, target)
 end
 
 function item:onLightBattleUse(user, target)
-    if Utils.containsValue(target.chara:getWeapon().tags, "punch") then
-        Assets.playSound("tearcard")
-        target.chara:addStatBuff("attack", self:getATIncrease(target))
-    end
     Game.battle:battleText(self:getLightBattleText(user, target))
+    if user.chara:getWeapon():hasTag("punch") then
+        Assets.playSound("tearcard")
+        user.chara:addStatBuff("attack", self:getATIncrease(user))
+    end
     return true
 end
 

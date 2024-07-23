@@ -7,12 +7,17 @@
         "Just Another Random User",     // contributor of magical glass classic
         "FireRainV"                     // contributor of magical glass classic
     ],
-    "version": "alpha",
+    "version": "beta v1.0.0",
     "engineVer": "v0.9.0-dev",
 
+    // PLEASE FOR THE LOVE OF GOD DON'T EDIT THESE
+    // Change mg's config options in your mod.json
     "config": {
         "defaultBattleSystem": "undertale",
         "soloBattles": false,
+        "keepTensionAfterLightBattles": false,
+        "lightSpeechBubble": "ut_large",
+        "lightWorldUndertaleText": true,
 
         "lightBattleTensionDefault": true,
         "lightBattleDefendDefault": true,
@@ -26,6 +31,8 @@
 
         "lightMenuCapitalizedName": true,
         "lightMenuCurrencyAlignFix": true,
+
+        "lightItemMenuPartySelectConfirm": false,
 
         "lightStatMenuCapitalizedName": true,
 

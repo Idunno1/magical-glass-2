@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "ut_items/hush_puppy")
+local item, super = Class(LightHealItem, "ut_items/hush_puppy")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Hush Puppy"
+    -- Name displayed in the normal item select menu
     self.short_name = "HushPupe"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "HushPuppy"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -18,6 +20,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 65
 
     -- Default shop sell price
@@ -35,10 +38,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:getWorldUseText(target)

@@ -1,7 +1,7 @@
 local LightBattleItemSelect, super = Class(Object, "LightBattleItemSelect")
 
 -- Note: This class defines the layout of the JP-styled item menu.
---       the EN item menu is handled by LightBattleMenuSelect.
+--       the normal item menu is handled by LightBattleMenuSelect.
 
 LightBattleItemSelect.SHOWN_ITEMS = 3
 
@@ -114,10 +114,10 @@ function LightBattleItemSelect:addMenuItem(item)
         ["tp"] = item.tp or 0,
         ["unusable"] = item.unusable or false,
         ["description"] = item.description or "",
-        ["party"] = item.party or {},
         ["color"] = item.color or nil,
+        ["party"] = item.party or {},
+        ["icons"] = item.icons or {},
         ["data"] = item.data or nil,
-        ["icons"] = item.icons or nil,
         ["callback"] = item.callback or function() end,
     }
     table.insert(self.menu_items, item)
@@ -157,12 +157,13 @@ function LightBattleItemSelect:refreshText()
         if item then
             text.visible = true
             text:setText("* " .. item.name)
-            text:setParty(item.party)
             if not self:canSelectItem(item) then
                 text:setColor(Utils.unpackColor(COLORS.gray))
             elseif item.color then
                 text:setColor(Utils.unpackColor(item.color))
             end
+            text:setParty(item.party)
+            text:setIcons(item.icons)
         else
             text.visible = false
             text:clear()

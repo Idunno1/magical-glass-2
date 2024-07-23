@@ -1,6 +1,6 @@
-local LightBattleStatusDisplay, super = Class(Object, "LightBattleStatusDisplay")
+local LightStatusDisplay, super = Class(Object, "LightStatusDisplay")
 
-function LightBattleStatusDisplay:init(x, y, battler)
+function LightStatusDisplay:init(x, y, battler)
     super.init(self, x, y)
 
     self.battler = battler
@@ -17,33 +17,31 @@ function LightBattleStatusDisplay:init(x, y, battler)
     self.debug_rect = {0, 0, SCREEN_WIDTH + 10, 24}
 end
 
-function LightBattleStatusDisplay:draw()
+function LightStatusDisplay:draw()
     self:drawStatus()
 
     super.draw(self)
 end
 
-function LightBattleStatusDisplay:drawStatus()
-    self:drawNameAndLV()
-    self:drawHP()
+function LightStatusDisplay:drawStatus()
+    self:drawNameAndLV(0, 0)
+    self:drawHP(245, 0)
     if self.draw_tension == "ALWAYS" or self.draw_tension == "BATTLE" and Game.battle.tension then
         self:drawTP()
     end
 end
 
-function LightBattleStatusDisplay:drawNameAndLV()
+function LightStatusDisplay:drawNameAndLV(x, y)
     local name = self.battler.chara:getName()
     local level = Game:isLight() and self.battler.chara:getLightLV() or self.battler.chara:getLevel()
 
     love.graphics.setFont(self.font)
     Draw.setColor(COLORS.white)
 
-    love.graphics.print(name .. "   LV " .. level)
+    love.graphics.print(name .. "   LV " .. level, x, y)
 end
 
-function LightBattleStatusDisplay:drawHP()
-    local x, y = 245, 0
-
+function LightStatusDisplay:drawHP(x, y)
     local current_health = self.battler.chara:getHealth()
     local max_health = self.battler.chara:getStat("health")
 
@@ -84,7 +82,7 @@ function LightBattleStatusDisplay:drawHP()
     love.graphics.print(current_health .. " / " .. max_health, (x + max_amount) + 14, y)
 end
 
-function LightBattleStatusDisplay:drawTP()
+function LightStatusDisplay:drawTP()
     local x, y = 500, 0
 
     Draw.setColor(COLORS.white)
@@ -111,4 +109,4 @@ function LightBattleStatusDisplay:drawTP()
     end
 end
 
-return LightBattleStatusDisplay
+return LightStatusDisplay

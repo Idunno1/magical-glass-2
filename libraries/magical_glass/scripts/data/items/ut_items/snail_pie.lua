@@ -1,4 +1,4 @@
-local item, super = Class(HealItem, "mg_item/snail_pie")
+local item, super = Class(LightHealItem, "mg_item/snail_pie")
 
 function item:init()
     super.init(self)
@@ -28,10 +28,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:onWorldUse(target)

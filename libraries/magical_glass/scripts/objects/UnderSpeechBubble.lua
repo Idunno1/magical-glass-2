@@ -40,7 +40,7 @@ function UnderSpeechBubble:init(text, x, y, options, speaker)
 end
 
 function UnderSpeechBubble:setStyle(style)
-    self.bubble = style or Game:getConfig("speechBubble")
+    self.bubble = style or MagicalGlass:getConfig("lightSpeechBubble")
     self.bubble_data = Assets.getBubbleData(self.bubble)
     self.auto = self.bubble_data["auto"] or false -- Whether the bubble automatically resizes.
     self.padding = self.bubble_data["text_padding"] or {left = 0, top = 0, right = 0, bottom = 0}

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.11" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="20" height="24" tilewidth="40" tileheight="40" infinite="0" nextlayerid="6" nextobjectid="42">
+<map version="1.11" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="20" height="24" tilewidth="40" tileheight="40" infinite="0" nextlayerid="6" nextobjectid="44">
  <editorsettings>
-  <export target="room1.lua" format="lua"/>
+  <export target="data.lua" format="lua"/>
  </editorsettings>
  <properties>
   <property name="light" type="bool" value="true"/>
   <property name="name" value="Test Map - Room 1"/>
  </properties>
- <tileset firstgid="1" source="../tilesets/castle.tsx"/>
+ <tileset firstgid="1" source="../../tilesets/castle.tsx"/>
  <layer id="1" name="tiles" width="20" height="24">
   <data encoding="csv">
 0,22,13,23,23,13,23,23,23,13,23,23,13,24,0,0,0,0,0,0,
@@ -135,6 +135,11 @@ no-good wall slammers.</property>
    <properties>
     <property name="actor" value="dummy_ut"/>
     <property name="lightencounter" value="test"/>
+   </properties>
+  </object>
+  <object id="42" name="encounterzone" x="80" y="730" width="380" height="170">
+   <properties>
+    <property name="encounter_group" value="test"/>
    </properties>
   </object>
  </objectgroup>

@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "mg_item/glamburger")
+local item, super = Class(LightHealItem, "mg_item/glamburger")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Glamburger"
+    -- Name displayed in the normal item select menu
     self.short_name = "GlamBurg"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "G. Burger"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -13,6 +15,7 @@ function item:init()
     -- How this item is used on other party members (eats, etc.)
     self.use_method_other = "eats"
 
+    -- The sound that plays when this item is used
     self.use_sound = "sparkle1"    
 
     -- Item type (item, key, weapon, armor)
@@ -20,6 +23,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 27
 
     -- Shop description
@@ -41,10 +45,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 return item

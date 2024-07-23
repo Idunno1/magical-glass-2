@@ -5,7 +5,9 @@ function item:init()
 
     -- Display name
     self.name = "Undyne Letter EX"
+    -- Name displayed in the normal item select menu
     self.short_name = "UndynLtrX"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Letter"
 
     -- Item type (item, key, weapon, armor)
@@ -24,10 +26,6 @@ function item:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:onLightBattleSelect(user, target)

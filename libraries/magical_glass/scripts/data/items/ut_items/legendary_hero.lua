@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "mg_item/legendary_hero")
+local item, super = Class(LightHealItem, "mg_item/legendary_hero")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Legendary Hero"
+    -- Name displayed in the normal item select menu
     self.short_name = "Leg.Hero"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "L. Hero"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -18,8 +20,10 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 40
 
+    -- The sound that plays when this item is used
     self.use_sound = "hero"
 
     -- Shop description
@@ -41,10 +45,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:getLightBattleUseSound(user, target)

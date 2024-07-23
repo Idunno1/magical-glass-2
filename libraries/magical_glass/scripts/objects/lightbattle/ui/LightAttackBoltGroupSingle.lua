@@ -62,29 +62,25 @@ function LightAttackBoltGroupSingle:isMultibolt()
     return self.count > 1
 end
 
-function LightAttackBoltGroupSingle:getExactDistance()
+function LightAttackBoltGroupSingle:getDistance()
     return self:getCurrentBolt().x - self.target.bolt_target
 end
 
-function LightAttackBoltGroupSingle:getDistance()
-    if self:isMultibolt() then
-        return math.floor(self:getCurrentBolt().x / self.speed) - math.floor(self.target.bolt_target / self.speed)
-    else
-        return Utils.round(self:getCurrentBolt().x - self.target.bolt_target)
-    end
+function LightAttackBoltGroupSingle:getMultiboltDistance()
+    return math.floor(self:getCurrentBolt().x / self.speed) - math.floor(self.target.bolt_target / self.speed)
 end
 
 function LightAttackBoltGroupSingle:checkMiss()
     if self:isMultibolt() then
-        if self.direction == "left" and (self:getExactDistance() < -self.target.multi_miss_threshold) then
+        if self.direction == "left" and (self:getDistance() < -self.target.multi_miss_threshold) then
             return true
-        elseif self.direction == "right" and (self:getExactDistance() > self.target.multi_miss_threshold) then
+        elseif self.direction == "right" and (self:getDistance() > self.target.multi_miss_threshold) then
             return true
         end
     else
-        if self.direction == "left" and (self:getExactDistance() < -self.target.miss_threshold) then
+        if self.direction == "left" and (self:getDistance() < -self.target.miss_threshold) then
             return true
-        elseif self.direction == "right" and (self:getExactDistance() > self.target.miss_threshold) then
+        elseif self.direction == "right" and (self:getDistance() > self.target.miss_threshold) then
             return true
         end
     end
@@ -179,7 +175,7 @@ end
 
 function LightAttackBoltGroupSingle:hitMulti()
     local bolt = self:getCurrentBolt()
-    local dist = math.floor(math.abs(self:getDistance()))
+    local dist = math.floor(math.abs(self:getMultiboltDistance()))
     
     self.score = self.score + self:evaluateMultiHit(dist)
 

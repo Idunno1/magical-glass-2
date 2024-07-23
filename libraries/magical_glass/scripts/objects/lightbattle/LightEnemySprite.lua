@@ -10,7 +10,7 @@ function LightEnemySprite:init(actor)
     self.actor = actor
 
     if actor then
-        self.sprite_parts = self.actor.light_battle_parts
+        self.sprite_parts = self.actor.light_enemy_parts
 
         self.width = actor:getWidth()
         self.height = actor:getHeight()
@@ -24,17 +24,30 @@ function LightEnemySprite:init(actor)
     self.debug_rect = {0, 0, 0, 0}
 end
 
-function LightEnemySprite:createPart(id, create, init, update, draw, parent_id)
-    self.parts[id] = {}
-    self.parts[id]._create = create
-    self.parts[id]._init   = init
-    self.parts[id]._update = update
-    self.parts[id]._draw   = draw
-    self.parts[id].__parent_id = parent_id
+function LightEnemySprite:createPart(id, create, functions, extra_func, parent_id)
+    if type(extra_func) == "string" then
+        parent_id = extra_func
+        extra_func = {}
+    end
+    functions = functions or {}
+    self.sprite_parts[id] = {}
+    self.sprite_parts[id]._create     = create
+    self.sprite_parts[id]._init       = functions["init"]   or function() end
+    self.sprite_parts[id]._update     = functions["update"] or function() end
+    self.sprite_parts[id]._draw       = functions["draw"]   or function() end
+    self.sprite_parts[id]._extra_func = extra_func or {}
+    self.sprite_parts[id].__parent_id = parent_id
+    return self.sprite_parts[id]
 end
 
 function LightEnemySprite:getPart(id)
     return self.sprite_parts[id]
+end
+
+function LightEnemySprite:callPartFunction(id, func_id, ...)
+    local part = self.sprite_parts[id]
+    part._extra_func[func_id](part, ...)
+    return part
 end
 
 function LightEnemySprite:setActor(actor)
@@ -51,10 +64,10 @@ function LightEnemySprite:setActor(actor)
     end
 
     self.actor = actor
-    self.sprite_parts = self.actor.light_battle_parts
+    self.sprite_parts = self.actor.light_enemy_parts
 
-    self.width = actor:getWidth()
-    self.height = actor:getHeight()
+    self.width = actor:getLightEnemyWidth()
+    self.height = actor:getLightEnemyHeight()
     self.path = actor:getSpritePath()
 
     actor:onSpriteInit(self)
@@ -68,7 +81,7 @@ function LightEnemySprite:setColor(r, g, b, a)
 end
 
 function LightEnemySprite:resetSprite(ignore_actor_callback)
-    if not ignore_actor_callback and self.actor:preResetSprite(self, self.sprite_parts) then
+    if not ignore_actor_callback and self.actor:preResetLightEnemySprite(self, self.sprite_parts) then
         return
     end
 
@@ -84,7 +97,7 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
             if type(part._create) == "string" then
                 -- if _create is a string, assume it's a path to a texture, so make
                 -- a Sprite with it
-                part.__sprite = Sprite(self.actor:getSpritePath() .. "/" .. part._create)
+                part.__sprite = Sprite(self.path .. "/" .. part._create)
                 part.__sprite.debug_rect = {0, 0, 0, 0}
             elseif type(part._create) == "function" then
                 if type(part._create()) == "string" then
@@ -97,8 +110,14 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
                     part.__sprite = part._create()
                 end
             end
-            if not part.__sprite then error("Couldn't create part \"" .. id .. ".\"") end
-            self:addChild(part.__sprite)
+            if part.__sprite then
+                if part._init then
+                    part._init(part)
+                end
+                self:addChild(part.__sprite)
+            else
+                print("[MG WARNING] Couldn't create part \"" .. id .. ".\"")
+            end
         end
     end
 
@@ -108,17 +127,11 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
         end
     end
 
-    for _,part in pairs(self.sprite_parts) do
-        if part._init then
-            part._init(part)
-        end
-    end
-
-    self.actor:onResetSprite(self)
+    self.actor:onResetLightEnemySprite(self)
 end
 
 function LightEnemySprite:update()
-    if self.actor:preSpriteUpdate(self) then
+    if self.actor:preLightEnemySpriteUpdate(self) then
         return
     end
 
@@ -130,17 +143,17 @@ function LightEnemySprite:update()
         end
     end
 
-    self.actor:onSpriteUpdate(self)
+    self.actor:onLightEnemySpriteUpdate(self)
 end
 
 function LightEnemySprite:draw()
-    if self.actor:preSpriteDraw(self) then
+    if self.actor:preLightEnemySpriteDraw(self) then
         return
     end
 
     super.draw(self)
 
-    self.actor:onSpriteDraw(self)
+    self.actor:onLightEnemySpriteDraw(self)
 end
 
 return LightEnemySprite

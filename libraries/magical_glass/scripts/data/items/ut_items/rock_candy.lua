@@ -1,10 +1,11 @@
-local item, super = Class(HealItem, "mg_item/rock_candy")
+local item, super = Class(LightHealItem, "mg_item/rock_candy")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Rock Candy"
+    -- Name displayed in the normal item select menu
     self.short_name = "RockCandy"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -15,6 +16,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 1
 
     -- Default shop sell price
@@ -35,10 +37,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false 
 end
 
 return item

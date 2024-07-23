@@ -18,18 +18,36 @@ function LightBattleUI:init()
     self.flee_text.visible = false
     Game.battle.arena:addChild(self.flee_text)
 
-    self.choice_box_neo = Choicebox(56, 49, 529, 103, true)
-    self.choice_box_neo.active = false
-    self.choice_box_neo.visible = false
-    self:addChild(self.choice_box_neo)
-
-    self.choice_box = TextChoicebox(56, 49, 529, 103, true)
+    -- todo: choicebox that's more ut-like and uses Game.battle.soul
+    self.choice_box = Choicebox(14, 12, 535, 107, true, {font = "main_mono"})
     self.choice_box.active = false
     self.choice_box.visible = false
-    self:addChild(self.choice_box)
+    Game.battle.arena:addChild(self.choice_box)
+
+    self.action_displays = {}
+
+    self.attack_target = nil
+    self.attacking = false
 
     self.menu_stack = {}
 
+    self.action_select = nil
+    self.menu_select = nil
+    self.list_menu_select = nil
+    self.enemy_select = nil
+    self.party_select = nil
+end
+
+function LightBattleUI:setup()
+    self:setupMenus()
+    self:setupActionDisplays()
+end
+
+function LightBattleUI:setupStory()
+    self:setupStoryActionDisplay()
+end
+
+function LightBattleUI:setupMenus()
     local action_select_x = Game.battle.arena.x - Game.battle.arena.width / 2
     self.action_select = LightBattleActionSelect(action_select_x - 16, Game.battle.arena.y + 60, true)
     Game.battle:addChild(self.action_select)
@@ -45,32 +63,33 @@ function LightBattleUI:init()
 
     self.party_select = LightBattlePartySelect(63, 15, true)
     Game.battle.arena:addChild(self.party_select)
-    
-    self.action_displays = {}
-    self:setupActionDisplays()
-
-    self.attack_target = nil
-    self.attacking = false
 end
 
 function LightBattleUI:setupActionDisplays()
     local status_x, status_y = (SCREEN_WIDTH / 2) - 290, SCREEN_HEIGHT - 80
-    local status = LightBattleStatusDisplay(status_x, status_y, Game.battle.party[1])
+    local status = LightStatusDisplay(status_x, status_y, Game.battle.party[1])
+    self:addChild(status)
+    table.insert(self.action_displays, status)
+end
+
+function LightBattleUI:setupStoryActionDisplay()
+    local status_x, status_y = 200, SCREEN_HEIGHT - 80
+    local status = LightStoryStatusDisplay(status_x, status_y, Game.battle.party[1])
     self:addChild(status)
     table.insert(self.action_displays, status)
 end
 
 function LightBattleUI:setFleeText(text)
     self.flee_text.visible = true
-    self.flee_text:setText(text)
+    self.flee_text:setText("[ut_shake]"..text)
 end
 
 function LightBattleUI:setEncounterText(text, after)
     self:clearEncounterText()
+    self.encounter_text:setText(text, after)
     if MagicalGlass.light_battle_text_shake then
-        self.encounter_text:setText("[ut_shake]"..text, after)
-    else
-        self.encounter_text:setText(text, after)
+        self.encounter_text.text.state.ut_shake = 1
+        self.encounter_text.text.draw_every_frame = true
     end
 end
 
@@ -340,6 +359,17 @@ function LightBattleUI:setupXActionEnemySelect(enemies, x_act)
     self:pushStack(self.enemy_select)
 end
 
+function LightBattleUI:setupSpellPartySelect(party, spell)
+    self.party_select:setup(party)
+    self.party_select:setCallback(function(member)
+        Game.battle:pushAction("SPELL", member, spell)
+    end)
+    self.party_select:setCancelCallback(function()
+        Game.battle:setState("MENUSELECT", "CANCEL")
+    end)
+    self:pushStack(self.party_select)
+end
+
 function LightBattleUI:setupItemSelect(inventory)
     local menu_items = {}
     for _,iitem in ipairs(inventory) do
@@ -408,8 +438,8 @@ function LightBattleUI:setupListItemSelect(inventory)
     self:pushStack(self.list_menu_select)
 end
 
-function LightBattleUI:setupItemPartySelect(item)
-    self.party_select:setup(Game.battle.party)
+function LightBattleUI:setupItemPartySelect(party, item)
+    self.party_select:setup(party)
     self.party_select:setCallback(function(member)
         Game.battle:pushAction("ITEM", member, item)
     end)

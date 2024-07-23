@@ -132,6 +132,8 @@ function LightPartyBattler:heal(amount, sound)
     end
 
     self:checkHealth()
+
+    return self.chara:getStat("health") == self.chara:getHealth()
 end
 
 function LightPartyBattler:addKarma(amount)

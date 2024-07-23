@@ -5,8 +5,11 @@ function cloudy_glasses:init()
 
     -- Display name
     self.name = "Cloudy Glasses"
+    -- Name displayed in the normal item select menu
     self.short_name = "ClodGlass"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Glasses"
+    -- Name displayed when used
     self.use_name = "glasses"
 
     -- Item type (item, key, weapon, armor)
@@ -35,15 +38,11 @@ function cloudy_glasses:init()
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
 
-    self.inv_bonus = 1
-
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
-        defense = 6
+        defense = 6,
+        inv = 1
     }
-end
-
-function cloudy_glasses:showEquipText(target)
-    Game.world:showText("* "..target:getNameOrYou().." equipped the glasses.")
 end
 
 return cloudy_glasses

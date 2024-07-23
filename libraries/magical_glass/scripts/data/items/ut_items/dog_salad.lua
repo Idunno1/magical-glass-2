@@ -1,4 +1,4 @@
-local item, super = Class(HealItem, "mg_item/dog_salad")
+local item, super = Class(LightHealItem, "mg_item/dog_salad")
 
 function item:init()
     super.init(self)
@@ -33,14 +33,7 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
-
--- welcome to the most poorly coded item in the library
--- honestly, fitting considering it's a toby reference
 
 function item:playLightBattleUseSound(user, target)
     Game.battle.timer:script(function(wait)
@@ -72,21 +65,9 @@ function item:onWorldUse(target)
         amount = 999
     end
 
-    if self.target == "ally" then
-        self:playWorldUseSound(target)
-        amount = amount
-        Game.world:heal(target, amount, text, self)
-        return true
-    elseif self.target == "party" then
-        self:playWorldUseSound(target)
-        for _,party_member in ipairs(target) do
-            amount = amount
-            Game.world:heal(party_member, amount, text, self)
-        end
-        return true
-    else
-        return false
-    end
+    self:playWorldUseSound(target)
+    Game.world:heal(target, amount, text, self)
+    return true
 end
 
 function item:getWorldUseText(target, dogsad)
@@ -143,7 +124,7 @@ function item:onLightBattleUse(user, target)
 
     self:playLightBattleUseSound(user, target)
     target:heal(self:getHealAmount())
-    Game.battle:battleText(self:getLightBattleText(user, target, dogsad).."\n"..self:getLightBattleHealingText(user, target, self:getHealAmount()))
+    Game.battle:battleText(self:getLightBattleText(user, target, dogsad).."\n"..self:getLightBattleHealingText(user, target, self:getBattleHealAmount()))
     return true
 end
 

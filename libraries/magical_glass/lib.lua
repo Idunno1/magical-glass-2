@@ -58,6 +58,8 @@ MagicalGlass.EVENT = {
     onLightBattleUIDraw             = "onLightBattleUIDraw",             -- LightBattleUI
 }
 
+MagicalGlass.__encounter_zones = {}
+
 -- not a fan of looping through every object in existence
 MagicalGlass.__dust_objects = 0
 MagicalGlass.__DUST_OBJECT_LIMIT = 8000
@@ -65,119 +67,117 @@ MagicalGlass.__DUST_OBJECT_LIMIT = 8000
 -- REGISTRY
 
 function lib:initRegistry()
-    self.random_encounters = {}
+    self.registry = {}
+
+    self.registry.encounter_groups = {}
     
-    self.light_encounters = {}
-    self.light_enemies = {}
-    self.light_waves = {}
-    self.light_battle_cutscenes = {}
+    self.registry.light_encounters = {}
+    self.registry.light_enemies = {}
+    self.registry.light_waves = {}
+    self.registry.light_battle_cutscenes = {}
 
-    self.light_shops = {}
+    self.registry.light_shops = {}
 
-    for _,path,rnd_enc in Registry.iterScripts("battle/randomencounters") do
-        assert(rnd_enc ~= nil, '"randomencounters/'..path..'.lua" does not return value')
-        rnd_enc.id = rnd_enc.id or path
-        self.random_encounters[rnd_enc.id] = rnd_enc
+    for _,path,group in Registry.iterScripts("world/encountergroups") do
+        assert(group ~= nil, '"encountergroups/'..path..'.lua" does not return value')
+        group.id = group.id or path
+        self.registry.encounter_groups[group.id] = group
     end
 
     for _,path,light_enc in Registry.iterScripts("battle/lightencounters") do
         assert(light_enc ~= nil, '"lightencounters/'..path..'.lua" does not return value')
         light_enc.id = light_enc.id or path
-        self.light_encounters[light_enc.id] = light_enc
+        self.registry.light_encounters[light_enc.id] = light_enc
     end
 
     for _,path,light_enemy in Registry.iterScripts("battle/lightenemies") do
         assert(light_enemy ~= nil, '"lightenemies/'..path..'.lua" does not return value')
         light_enemy.id = light_enemy.id or path
-        self.light_enemies[light_enemy.id] = light_enemy
+        self.registry.light_enemies[light_enemy.id] = light_enemy
     end
 
     for _,path,light_wave in Registry.iterScripts("battle/lightwaves") do
         assert(light_wave ~= nil, '"lightwaves/'..path..'.lua" does not return value')
         light_wave.id = light_wave.id or path
-        self.light_waves[light_wave.id] = light_wave
+        self.registry.light_waves[light_wave.id] = light_wave
     end
 
     for _,path,cutscene in Registry.iterScripts("battle/lightbattlecutscenes") do
         assert(cutscene ~= nil, '"lightbattlecutscenes/'..path..'.lua" does not return value')
         cutscene.id = cutscene.id or path
-        self.light_battle_cutscenes[cutscene.id] = cutscene
+        self.registry.light_battle_cutscenes[cutscene.id] = cutscene
     end
 
     for _,path,light_shop in Registry.iterScripts("lightshops") do
         assert(light_shop ~= nil, '"lightshops/'..path..'.lua" does not return value')
         light_shop.id = light_shop.id or path
-        self.light_shops[light_shop.id] = light_shop
+        self.registry.light_shops[light_shop.id] = light_shop
     end
 end
 
-function lib:getRandomEncounter(id)
-    return self.random_encounters[id]
+function lib:getEncounterGroup(id)
+    return MagicalGlass.registry.encounter_groups[id]
 end
 
-function lib:createRandomEncounter(id, ...)
-    if self.random_encounters[id] then
-        return self.random_encounters[id](...)
+function lib:createEncounterGroup(id, ...)
+    if MagicalGlass.registry.encounter_groups[id] then
+        return MagicalGlass.registry.encounter_groups[id](...)
     else
-        error("Attempt to create non existent random encounter \"" .. tostring(id) .. "\"")
+        error("Attempt to create non existent encounter group \"" .. tostring(id) .. "\"")
     end
 end
 
 function lib:getLightEncounter(id)
-    return self.light_encounters[id]
+    return MagicalGlass.registry.light_encounters[id]
 end
 
 function lib:createLightEncounter(id, ...)
-    if self.light_encounters[id] then
-        return self.light_encounters[id](...)
+    if MagicalGlass.registry.light_encounters[id] then
+        return MagicalGlass.registry.light_encounters[id](...)
     else
         error("Attempt to create non existent light encounter \"" .. tostring(id) .. "\"")
     end
 end
 
 function lib:getLightEnemy(id)
-    return self.light_enemies[id]
+    return MagicalGlass.registry.light_enemies[id]
 end
 
 function lib:createLightEnemy(id, ...)
-    if self.light_enemies[id] then
-        return self.light_enemies[id](...)
+    if MagicalGlass.registry.light_enemies[id] then
+        return MagicalGlass.registry.light_enemies[id](...)
     else
         error("Attempt to create non existent light enemy \"" .. tostring(id) .. "\"")
     end
 end
 
 function lib:getLightWave(id)
-    return self.light_waves[id]
+    return MagicalGlass.registry.light_waves[id]
 end
 
 function lib:createLightWave(id, ...)
-    if self.light_waves[id] then
-        return self.light_waves[id](...)
+    if MagicalGlass.registry.light_waves[id] then
+        return MagicalGlass.registry.light_waves[id](...)
     else
         error("Attempt to create non existent light wave \"" .. tostring(id) .. "\"")
     end
 end
 
-function lib:getLightBattleCutscene(id)
-    return self.light_waves[id]
-end
-
-function lib:createLightBattleCutscene(id, ...)
-    if self.light_waves[id] then
-        return self.light_battle_cutscenes[id](...)
-    else
-        error("Attempt to create non existent light battle cutscene \"" .. tostring(id) .. "\"")
+function lib.getLightBattleCutscene(group, id)
+    local cutscene = MagicalGlass.registry.light_battle_cutscenes[group]
+    if type(cutscene) == "table" then
+        return cutscene[id], true
+    elseif type(cutscene) == "function" then
+        return cutscene, false
     end
 end
-
 
 -- INIT
 
 function lib:init()
     print("oh boy here we go again")
     print("Loaded Magical Glass 2!")
-
+    
     self:initRegistry()
 
     for _,path in ipairs(Utils.getFilesRecursive(self.info.path.."/scripts/init")) do
@@ -196,8 +196,9 @@ function lib:save(data)
     data.magical_glass_2["list_item_menu"]              = self.list_item_menu
 
     data.magical_glass_2["pink_spare"]                  = self.pink_spare
-
     data.magical_glass_2["always_flee"]                 = self.always_flee
+
+    data.magical_glass_2["kills"]                       = self.kills
 
     data.magical_glass_2["__has_dim_box_a"]             = self.__has_dim_box_a
     data.magical_glass_2["__has_dim_box_b"]             = self.__has_dim_box_b
@@ -227,6 +228,8 @@ function lib:load(data, is_new_file)
         self.pink_spare                     = false
         self.always_flee                    = false
 
+        self.kills                          = 0
+
         self.__has_dim_box_a                = false
         self.__has_dim_box_b                = false
 
@@ -245,6 +248,8 @@ function lib:load(data, is_new_file)
 
         self.pink_spare                     = data.magical_glass_2["pink_spare"]
         self.always_flee                    = data.magical_glass_2["always_flee"]
+
+        self.kills                          = data.magical_glass_2["kills"]
 
         self.__has_dim_box_a                = data.magical_glass_2["__has_dim_box_a"]
         self.__has_dim_box_b                = data.magical_glass_2["__has_dim_box_b"]
@@ -310,7 +315,7 @@ function lib:registerDebugOptions(debug)
     end
 
     debug:registerMenu("light_encounter_select", "Select Light Encounter", "search")
-    for id,_ in pairs(self.light_encounters) do
+    for id,_ in pairs(self.registry.light_encounters) do
         if id ~= "_nobody" then
             debug:registerOption("light_encounter_select", id, "Start this encounter.", function()
                 Game:encounterLight(id, true, nil, nil, true)
@@ -322,7 +327,7 @@ end
 
 function lib:registerTextCommands(text)
     text:registerCommand("ut_shake", function(text, node, dry)
-        text.state.ut_shake = node.arguments[1] or 1
+        text.state.ut_shake = tonumber(node.arguments[1]) or 1
         text.draw_every_frame = true
     end)
 end
@@ -331,6 +336,16 @@ function lib:onDrawText(text, node, state, x, y, scale, font, use_color)
     if state.ut_shake and state.ut_shake > 0 then
         state.offset_x = Utils.random(state.ut_shake) - state.ut_shake / 2
         state.offset_y = Utils.random(state.ut_shake) - state.ut_shake / 2
+    end
+end
+
+function lib:onFootstep(chara, num)
+    if chara == Game.world.player then
+        if #self.__encounter_zones > 0 then
+            for _,enc_zone in ipairs(self.__encounter_zones) do
+                enc_zone:onFootstep(num)
+            end
+        end
     end
 end
 

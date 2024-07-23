@@ -1,4 +1,4 @@
-local item, super = Class(HealItem, "mg_item/hot_cat")
+local item, super = Class(LightHealItem, "mg_item/hot_cat")
 
 function item:init()
     super.init(self)
@@ -17,6 +17,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 21
 
     -- Default shop price (sell price is halved)

@@ -10,7 +10,7 @@ return {
   tilewidth = 40,
   tileheight = 40,
   nextlayerid = 6,
-  nextobjectid = 42,
+  nextobjectid = 44,
   properties = {
     ["light"] = true,
     ["name"] = "Test Map - Room 1"
@@ -19,8 +19,8 @@ return {
     {
       name = "castle",
       firstgid = 1,
-      filename = "../tilesets/castle.tsx",
-      exportfilename = "../tilesets/castle.lua"
+      filename = "../../tilesets/castle.tsx",
+      exportfilename = "../../tilesets/castle.lua"
     }
   },
   layers = {
@@ -538,6 +538,21 @@ return {
           properties = {
             ["actor"] = "dummy_ut",
             ["lightencounter"] = "test"
+          }
+        },
+        {
+          id = 42,
+          name = "encounterzone",
+          type = "",
+          shape = "rectangle",
+          x = 80,
+          y = 730,
+          width = 380,
+          height = 170,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["encounter_group"] = "test"
           }
         }
       }

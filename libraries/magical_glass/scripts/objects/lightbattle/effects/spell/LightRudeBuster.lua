@@ -43,8 +43,13 @@ function LightRudeBuster:update()
         Assets.playSound("rudebuster_hit")
         for i = 1, 8 do
             local burst = RudeBusterBurst(self.red, self.target_x, self.target_y, math.rad(45 + ((i - 1) * 90)), i > 4)
-            burst:setScale(3)
-            burst.physics.speed = 35
+            if self.red then
+                burst:setScale(4)
+                burst.physics.speed = 40
+            else
+                burst:setScale(3)
+                burst.physics.speed = 35
+            end
             burst.layer = self.layer + (0.01 * i)
             self.parent:addChild(burst)
         end

@@ -19,10 +19,12 @@ function item:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    
+
+    -- Default shop price (sell price is halved)
     self.price = 300
-    
-    self.shop_magic = true
+
+    -- Whether this weapon should display its magic bonus instead of its defense bonus in shops
+    self.show_magic_in_shop = true
 
     -- Equip bonuses (for weapons and armor)
     self.bonuses = {
@@ -31,7 +33,11 @@ function item:init()
 
     -- Attack animation (only used for simple animations)
     self.attack_animation = "effects/attack/slap_n"
-
+    -- The sound played when attacking if onLightBattleAttack isn't overwritten.
+    self.attack_sound = "punchweak"
+    -- The pitch of this item's attack sound.
+    self.attack_pitch = 1.4
+    
     -- Default dark item conversion for this item
     self.dark_item = "snowring"
 end

@@ -4,7 +4,11 @@ function LightRudeBusterBeam:init(red, x, y, target_x, target_y)
     super.init(self, red and "effects/rudebuster/beam_red" or "effects/rudebuster/beam", x, y)
 
     self:setOrigin(0.5)
-    self:setScale(4)
+    if red then
+        self:setScale(5)
+    else
+        self:setScale(4)
+    end
 
     self:play(1/30, true)
 
@@ -35,7 +39,11 @@ function LightRudeBusterBeam:update()
         local sprite = Sprite(self.red and "effects/rudebuster/beam_red" or "effects/rudebuster/beam", self.x, self.y)
         sprite:fadeOutSpeedAndRemove()
         sprite:setOrigin(0.5)
-        sprite:setScale(2, 1.8)
+        if self.red then
+            sprite:setScale(2.4, 2.2)
+        else
+            sprite:setScale(2, 1.8)
+        end
         sprite.rotation = self.rotation
         sprite.alpha = self.alpha - 0.2
         sprite.layer = self.layer - 0.01

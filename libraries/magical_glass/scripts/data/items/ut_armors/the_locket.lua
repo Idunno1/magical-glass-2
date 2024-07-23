@@ -5,6 +5,7 @@ function the_locket:init()
 
     -- Display name
     self.name = "The Locket"
+    -- Name displayed in the normal item select menu
     self.short_name = "TheLocket"
 
     -- Item type (item, key, weapon, armor)
@@ -25,9 +26,8 @@ function the_locket:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 99
     }

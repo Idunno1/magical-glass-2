@@ -5,8 +5,11 @@ function stained_apron:init()
 
     -- Display name
     self.name = "Stained Apron"
+    -- Name displayed in the normal item select menu
     self.short_name = "StainApro"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Apron"
+    -- Name displayed when used
     self.use_name = "apron"
 
     -- Item type (item, key, weapon, armor)
@@ -27,9 +30,8 @@ function stained_apron:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 11
     }
@@ -40,10 +42,6 @@ function stained_apron:onLightBattleNextTurn(battler, turn)
         battler:heal(1)
         Assets.stopAndPlaySound("power")
     end
-end
-
-function stained_apron:showEquipText(target)
-    Game.world:showText("* " .. target:getNameOrYou() .. " equipped the apron.")
 end
 
 return stained_apron

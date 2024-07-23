@@ -1,11 +1,13 @@
-local butterscotch_pie, super = Class(HealItem, "mg_item/butterscotch_pie")
+local item, super = Class(LightHealItem, "mg_item/butterscotch_pie")
 
-function butterscotch_pie:init()
+function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Butterscotch Pie"
+    -- Name displayed in the normal item select menu
     self.short_name = "ButtsPie"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Pie"
 
     -- Item type (item, key, weapon, armor)
@@ -28,24 +30,28 @@ function butterscotch_pie:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
-function butterscotch_pie:onWorldUse(target)
+function item:onWorldUse(target)
     self:playWorldUseSound(target)
     target:setHealth(target:getStat("health"))
-    Game.world:showText(self:getLightWorldHealingText(target).."\n"..self:getLightWorldHealingText(target))
+    if target.you then
+        Game.world:showText("* You ate the Butterscotch Pie.\n* Your HP was maxed out.")
+    else
+        Game.world:showText("* "..target:getNameOrYou().." ate the Butterscotch Pie.\n* "..target:getNameOrYou().."'s HP was maxed out.")
+    end
     return true
 end
 
-function butterscotch_pie:onLightBattleUse(user, target)
+function item:onLightBattleUse(user, target)
     self:playLightBattleUseSound(user, target)
     target.chara:setHealth(target.chara:getStat("health"))
-    Game.battle:battleText(self:getLightBattleText(user, target).."\n"..self:getLightBattleHealingText(user, target))
+    if target.chara.you then
+        Game.battle:battleText("* You ate the Butterscotch Pie.\n* Your HP was maxed out.")
+    else
+        Game.battle:battleText("* "..target.chara:getNameOrYou().." ate the Butterscotch Pie.\n* "..target.chara:getNameOrYou().."'s HP was maxed out.")
+    end
     return true
 end
 
-return butterscotch_pie
+return item

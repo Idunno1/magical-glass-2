@@ -56,20 +56,22 @@ Utils.hook(World, "spawnPlayer", function(orig, self, ...)
 end)
 
 Utils.hook(World, "heal", function(orig, self, target, amount, text, item)
+    if type(target) == "string" then
+        target = Game:getPartyMember(target)
+    end
+    
     if Game:isLight() then
-        if type(target) == "string" then
-            target = Game:getPartyMember(target)
-        end
-
         local maxed = target:heal(amount, false)
         local message
         if item and item.getLightWorldHealingText then
             message = item:getLightWorldHealingText(target, amount, maxed)
         else
-            if maxed then
+            if target.you and maxed then
                 message = "* Your HP was maxed out."
+            elseif maxed then
+                message = "* " .. target:getNameOrYou() .. "'s HP was maxed out."
             else
-                message = "* You recovered " .. amount .. " HP!"
+                message = "* " .. target:getNameOrYou() .. " recovered " .. amount .. " HP!"
             end
         end
 
@@ -81,7 +83,7 @@ Utils.hook(World, "heal", function(orig, self, target, amount, text, item)
             Game.world:showText(message)
         end
     else
-        orig(self, target, amount, text, item)
+        orig(self, target, amount, text)
     end
 end)
 
@@ -106,7 +108,7 @@ if not Mod.libs["widescreen"] then
             width, height = 530, 104
         end
     
-        if (Game:isLight() and MagicalGlass:getConfig("forceUnderTextbox")) or options["undertext"] then
+        if (Game:isLight() and MagicalGlass:getConfig("lightWorldUndertaleText")) or options["undertext"] then
             self.textbox = UnderTextbox(56, 344, width, height)
         else
             self.textbox = Textbox(56, 344, width, height)

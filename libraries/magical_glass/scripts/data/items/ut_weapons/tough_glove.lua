@@ -5,7 +5,9 @@ function tough_glove:init()
 
     -- Display name
     self.name = "Tough Glove"
+    -- Name displayed in the normal item select menu
     self.short_name = "TuffGlove"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Glove"
 
     -- Item type (item, key, weapon, armor)
@@ -30,20 +32,23 @@ function tough_glove:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         attack = 4
     }
 
+    -- The direction this weapon's bolts travel.
+    -- Currently, the multi-battler target object forces this to be left.
     self.bolt_direction = "random"
 
+    -- A table of numbers or tables that determine where bolts spawned after
+    -- the first bolt should spawn.
+    -- Number entries always place a bolt in a certain positions, table entries
+    -- will get a random value picked from them.
     self.multibolt_variance = {{15}, {50}, {85}}
 
-    self.attack_punches = 4
-    self.attack_punch_time = 1
-
+    -- The sound played when attacking if onLightBattleAttack isn't overwritten.
     self.attack_sound = "punchstrong"
 
     self.tags = {"punch"}

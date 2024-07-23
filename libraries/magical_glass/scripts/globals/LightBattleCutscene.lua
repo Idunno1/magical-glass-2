@@ -301,27 +301,35 @@ function LightBattleCutscene:battlerText(battlers, text, options)
     end
 end
 
-local function waitForChoicerNeo() return Game.battle.battle_ui.choice_box_neo.done, Game.battle.battle_ui.choice_box_neo.selected_choice end
-function LightBattleCutscene:choicerNeo(choices, options)
+function LightBattleCutscene:speechBubble(text, x, y, options)
     options = options or {}
-
-    Game.battle.battle_ui.choice_box_neo.active = true
-    Game.battle.battle_ui.choice_box_neo.visible = true
-    Game.battle.battle_ui.encounter_text.active = false
-    Game.battle.battle_ui.encounter_text.visible = false
-
-    Game.battle.battle_ui.choice_box_neo.done = false
-
-    Game.battle.battle_ui.choice_box_neo:clearChoices()
-    for _,choice in ipairs(choices) do
-        Game.battle.battle_ui.choice_box_neo:addChoice(choice)
+    local wait = options["wait"] or options["wait"] == nil
+    local bubble
+    bubble = UnderSpeechBubble(text, x, y, options)
+    Game.battle:addChild(bubble)
+    bubble:setAdvance(options["advance"] or options["advance"] == nil)
+    bubble:setAuto(options["auto"])
+    if not bubble.text.can_advance then
+        wait = options["wait"]
     end
-    Game.battle.battle_ui.choice_box_neo:setColors(options["color"], options["highlight"])
-
-    if options["wait"] or options["wait"] == nil then
-        return self:wait(waitForChoicerNeo)
+    bubble:setCallback(function()
+        bubble:remove()
+        local after = options["after"]
+        if after then after() end
+    end)
+    if options["line_callback"] then
+        bubble:setLineCallback(options["line_callback"])
+    end
+    local wait_func = function()
+        if not bubble:isDone() then
+            return false
+        end
+        return true
+    end
+    if wait then
+        return self:wait(wait_func)
     else
-        return waitForChoicerNeo, Game.battle.battle_ui.choice_box_neo
+        return wait_func, bubbles
     end
 end
 

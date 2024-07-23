@@ -16,10 +16,6 @@ function Basic:onStart()
     end)
 end
 
-function Basic:onArenaEnter()
-    return true
-end
-
 function Basic:update()
     -- Code here gets called every frame
 

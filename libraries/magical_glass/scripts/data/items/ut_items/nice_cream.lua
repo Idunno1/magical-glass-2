@@ -1,11 +1,14 @@
-local item, super = Class(HealItem, "mg_item/nice_cream")
+local item, super = Class(LightHealItem, "mg_item/nice_cream")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Nice Cream"
+    -- Name displayed in the normal item select menu
     self.short_name = "NiceCream"
+    -- Name displayed in the normal item select menu during a serious encounter
+    self.serious_name = "Ice Cream"
 
     -- How this item is used on you (ate, drank, eat, etc.)
     self.use_method = "ate"
@@ -15,6 +18,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 15
 
     -- Default shop price (sell price is halved)
@@ -34,10 +38,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:getWorldUseText(target)

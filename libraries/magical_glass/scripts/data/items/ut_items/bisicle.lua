@@ -1,4 +1,4 @@
-local item, super = Class(HealItem, "mg_item/bisicle")
+local item, super = Class(LightHealItem, "mg_item/bisicle")
 
 function item:init()
     super.init(self)
@@ -11,6 +11,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 11
 
     -- Shop description
@@ -32,10 +33,9 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
+    
     -- Item this item will get turned into when consumed
-    self.result_item = "ut_items/unisicle"
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
+    self.result_item = "mg_item/unisicle"
 end
 
 function item:getWorldUseText(target)

@@ -1,11 +1,12 @@
 Utils.hook(Item, "init", function(orig, self)
     orig(self)
 
-    -- Short name for the light battle item menu
+    -- Name displayed in the normal item select menu
     self.short_name = nil
-    -- Serious name for the light battle item menu
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = nil
 
+    -- Tags that apply to this item
     self.tags = {}
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -13,8 +14,8 @@ Utils.hook(Item, "init", function(orig, self)
     -- How this item is used on other party members (eats, etc.)
     self.use_method_other = nil
     
-    -- Displays magic stats for weapons and armors in light shops
-    self.shop_magic = false
+    -- Whether this weapon should display its magic bonus instead of its defense bonus in shops
+    self.show_magic_in_shop = false
     -- Doesn't display stats for weapons and armors in light shops
     self.shop_dont_show_change = false
 end)
@@ -29,6 +30,10 @@ Utils.hook(Item, "getUseName", function(orig, self)
     else
         return orig(self)
     end
+end)
+
+Utils.hook(Item, "hasTag", function(orig, self, tag)
+    return Utils.containsValue(self.tags, tag)
 end)
 
 Utils.hook(Item, "onCheck", function(orig, self)

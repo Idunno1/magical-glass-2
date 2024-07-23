@@ -4,7 +4,15 @@ Utils.hook(LightItemMenu, "init", function(orig, self)
     -- States: ITEMSELECT, ITEMOPTION, PARTYSELECT
     self.party_selecting = 1
 
-    self.party_select_bg = UIBox(-36, 242, 370, 52)
+    if MagicalGlass:getConfig("lightItemMenuPartySelectConfirm") then
+        self.party_select_confirm = true
+    else
+        self.party_select_confirm = false
+    end
+
+    print(self.party_select_confirm)
+
+    self.party_select_bg = UIBox(-36, 242, 372, 52)
     self.party_select_bg.visible = false
     self.party_select_bg.layer = -1
     self:addChild(self.party_select_bg)
@@ -60,7 +68,7 @@ Utils.hook(LightItemMenu, "update", function(orig, self)
                     self.party_select_bg.visible = true
                     self.party_selecting = 1
                     self.state = "PARTYSELECT"
-                elseif #Game.party > 1 and item.target == "party" then
+                elseif self.party_select_confirm and #Game.party > 1 and item.target == "party" then
                     self.ui_select:stop()
                     self.ui_select:play()
                     self.party_select_bg.visible = true
@@ -161,14 +169,26 @@ Utils.hook(LightItemMenu, "draw", function(orig, self)
 
         love.graphics.printf("Use " .. item:getName() .. " on...", -50, 233, 400, "center")
 
-        for i, member in ipairs(Game.party) do
-            love.graphics.print(member:getName(), ((i - 1) * 122) - 10, 269)
-        end
-
-        Draw.setColor(Game:getSoulColor())
-        for i,_ in ipairs(Game.party) do
-            if i == self.party_selecting or self.party_selecting == "all" then
-                Draw.draw(self.heart_sprite, (((i - 1) * 122) - ((self.heart_sprite:getWidth() * 2) + 5)) - 10, 277, 0, 2)
+        -- "fuck it, i'm hardcoding it" -me
+        if #Game.party == 2 then
+            for i, member in ipairs(Game.party) do
+                love.graphics.print(member:getName(), ((i - 1) * 122) + 68, 270)
+            end
+            Draw.setColor(Game:getSoulColor())
+            for i,_ in ipairs(Game.party) do
+                if i == self.party_selecting or self.party_selecting == "all" then
+                    Draw.draw(self.heart_sprite, ((i - 1) * 122) + 35, 277, 0, 2)
+                end
+            end
+        elseif #Game.party == 3 then
+            for i, member in ipairs(Game.party) do
+                love.graphics.print(member:getName(), ((i - 1) * 122) - 2, 270)
+            end
+            Draw.setColor(Game:getSoulColor())
+            for i,_ in ipairs(Game.party) do
+                if i == self.party_selecting or self.party_selecting == "all" then
+                    Draw.draw(self.heart_sprite, ((i - 1) * 122) - 35, 277, 0, 2)
+                end
             end
         end
     end

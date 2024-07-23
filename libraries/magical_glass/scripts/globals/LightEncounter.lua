@@ -1,20 +1,19 @@
 local LightEncounter = Class(nil, "LightEncounter")
 
 function LightEncounter:init()
-    -- A table defining the default location of where the soul should move to
-    -- during the battle transition. If this is nil, it will move to the FIGHT button.
-    -- Associated getter: getSoulTarget (table[x, y])
-    self.soul_target = nil
-
     -- Text that will be displayed when the battle starts
     -- Associated getter: getEncounterText (string)
     self.text = "* TestMonster and its cohorts\ndraw near!"
 
     -- Whether this encounter allows commands to be input. Changes the UI if active.
     self.story = false
-    -- The wave that gets spawned if story is true.
-    -- Associated getter: getStoryWave (string or Wave)
-    self.story_wave = nil
+    -- The cutscene that will play once a battle starts and story is true.
+    self.story_cutscene = nil
+
+    -- A table defining the default location of where the soul should move to
+    -- during the battle transition. If this is nil, it will move to the FIGHT button.
+    -- Associated getter: getSoulTarget (table[x, y])
+    self.soul_target = nil
 
     -- The image to draw for the background. Leave blank to disable the background.
     -- Associated getter: getBackgroundImage (bool)
@@ -122,7 +121,9 @@ function LightEncounter:getNextMenuWaves()
     return waves
 end
 
-function LightEncounter:getStoryWave() return self.story_wave end
+function LightEncounter:getSoulTarget() return self.soul_target end
+
+function LightEncounter:getStoryCutscene() return self.story_cutscene end
 
 function LightEncounter:getBackgroundImage()
     if self.background_image then
@@ -142,13 +143,7 @@ end
 function LightEncounter:getSoulColor() return Game:getSoulColor() end
 
 function LightEncounter:getFleeThreshold()
-    local threshold = self.flee_threshold 
-    for _,party in ipairs(Game.battle.party) do
-        for _,equip in ipairs(party.chara:getEquipment()) do
-            threshold = equip:applyFleeBonus(threshold)
-        end
-    end
-    return threshold
+    return self.flee_threshold 
 end
 
 function LightEncounter:getFleeMessage()
@@ -190,9 +185,7 @@ function LightEncounter:onBattleStart() end
 function LightEncounter:onBattleEnd(fled) end
 
 function LightEncounter:onFleeStart() end
-function LightEncounter:onFlee() 
-    Assets.playSound("escaped")
-end
+function LightEncounter:onFlee() end
 function LightEncounter:onFleeFail() end
 
 function LightEncounter:onTurnStart() end
@@ -211,25 +204,9 @@ function LightEncounter:onSubStateChange(old, new, reason, extra) end
 
 function LightEncounter:onActionButtonSelect(battler, button) end
 
--- todo
-function LightEncounter:onMenuSelect(state_reason, item, can_select) end
-function LightEncounter:onMenuCancel(state_reason, item) end
+function LightEncounter:onDialogueEnd() end
 
-function LightEncounter:onEnemySelect(state_reason, enemy_index) end
-function LightEncounter:onEnemyCancel(state_reason, enemy_index) end
-
-function LightEncounter:onPartySelect(state_reason, party_index) end
-function LightEncounter:onPartyCancel(state_reason, party_index) end
-
-function LightEncounter:onDialogueEnd()
-    Game.battle:setState("DEFENDINGBEGIN")
-end
-
-function LightEncounter:onWavesDone(waves)
-    Game.battle:toggleSoul(false)
-    Game.battle:setState("DEFENDINGEND", "WAVEENDED")
-end
-
+function LightEncounter:onWavesDone(waves) end
 function LightEncounter:onMenuWavesDone(waves) end
 
 function LightEncounter:getDefeatedEnemies()
@@ -265,8 +242,8 @@ function LightEncounter:soulTransition(x, y)
     local target_x, target_y
     if x and y then
         target_x, target_y = x, y
-    elseif self.soul_target and type(self.soul_target) == "table" and (self.soul_target.x and self.soul_target.y) then
-        target_x, target_y = self.soul_target.x, self.soul_target.y
+    elseif self:getSoulTarget() then
+        target_x, target_y = self:getSoulTarget()
     else
         -- replace this with non-absolute coords
         target_x, target_y = 49, 455
@@ -335,8 +312,8 @@ function LightEncounter:fastSoulTransition(x, y)
     local target_x, target_y
     if x and y then
         target_x, target_y = x, y
-    elseif self.soul_target and type(self.soul_target) == "table" and (self.soul_target.x and self.soul_target.y) then
-        target_x, target_y = self.soul_target.x, self.soul_target.y
+    elseif self:getSoulTarget() then
+        target_x, target_y = self:getSoulTarget()
     else
         -- replace this with non-absolute coords
         target_x, target_y = 49, 455
@@ -479,6 +456,11 @@ function LightEncounter:attemptFlee(turn_count)
     self:onFleeStart()
 
     local chance = Utils.random(100) + (10 * (turn_count - 1))
+    for _,party in ipairs(Game.battle.party) do
+        for _,equip in ipairs(party.chara:getEquipment()) do
+            chance = equip:applyFleeBonus(chance)
+        end
+    end
 
     if chance > self:getFleeThreshold() then
         self:onFlee()

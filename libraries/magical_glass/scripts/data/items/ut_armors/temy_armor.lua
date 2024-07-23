@@ -5,9 +5,12 @@ function temy_armor:init()
 
     -- Display name
     self.name = "temy armor"
+    -- Name displayed in the normal item select menu
     self.short_name = "Temmie AR"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Tem.Armor"
-    self.equip_display_name = "Temmie Armor"
+    -- Name displayed in the light world stat menu
+    self.equip_name = "Temmie Armor"
 
     -- Item type (item, key, weapon, armor)
     self.type = "armor"
@@ -34,14 +37,12 @@ function temy_armor:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
-    self.inv_bonus = 15/30
-
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 20,
-        attack = 10
+        attack = 10,
+        inv = 15/30
     }
 end
 

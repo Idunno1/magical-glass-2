@@ -5,8 +5,11 @@ function heart_locket:init()
 
     -- Display name
     self.name = "Heart Locket"
+    -- Name displayed in the normal item select menu
     self.short_name = "<--Locket"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "H. Locket"
+    -- Name displayed when used
     self.use_name = "locket"
 
     -- Item type (item, key, weapon, armor)
@@ -27,16 +30,11 @@ function heart_locket:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 15
     }
-end
-
-function heart_locket:showEquipText(target)
-    Game.world:showText("* "..target:getNameOrYou().." equipped the locket.")
 end
 
 return heart_locket

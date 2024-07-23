@@ -55,10 +55,6 @@ function LightAttackBoltGroupMulti:getCurrentBolt()
     end
 end
 
-function LightAttackBoltGroupMulti:getDistance()
-    return self.target:getDistance(self)
-end
-
 function LightAttackBoltGroupMulti:isMultibolt()
     return self.count > 1
 end
@@ -90,20 +86,16 @@ function LightAttackBoltGroupMulti:createBolts()
     end
 end
 
-function LightAttackBoltGroupMulti:getExactDistance()
-    return self:getCurrentBolt().x - self.target.bolt_target
+function LightAttackBoltGroupMulti:getDistance()
+    return Utils.round(self:getCurrentBolt().x - self.target.bolt_target)
 end
 
-function LightAttackBoltGroupMulti:getDistance()
-    if self:isMultibolt() then
-        return math.floor(self:getCurrentBolt().x / self.speed) - math.floor(self.target.bolt_target / self.speed)
-    else
-        return Utils.round(self:getCurrentBolt().x - self.target.bolt_target)
-    end
+function LightAttackBoltGroupMulti:getMultiboltDistance()
+    return math.floor(self:getCurrentBolt().x / self.speed) - math.floor(self.target.bolt_target / self.speed)
 end
 
 function LightAttackBoltGroupMulti:checkMiss()
-    if self:getExactDistance() < -self.target.miss_threshold then
+    if self:getDistance() < -self.target.miss_threshold then
         return true
     end
     return false
@@ -155,11 +147,11 @@ end
 
 function LightAttackBoltGroupMulti:hitMulti()
     local bolt = self:getCurrentBolt()
-    local dist = math.floor(self:getDistance())
+    local dist = math.floor(self:getMultiboltDistance())
     
     self.score = self.score + self:evaluateMultiHit(dist)
 
-    if dist < 0 then scoreelf.score = self.score * 0.8 end
+    if dist < 0 then self.score = self.score * 0.8 end
 
     if self.score > 430 then
         self.score = self.score * 1.8

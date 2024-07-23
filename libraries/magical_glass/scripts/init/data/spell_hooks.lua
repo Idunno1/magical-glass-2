@@ -1,9 +1,14 @@
+Utils.hook(Spell, "init", function(orig, self)
+    orig(self)
+    self.light_cast_name = nil
+end)
+
 Utils.hook(Spell, "getLightBattleCastName", function(orig, self, user, target)
-    return self.cast_name or self:getName()
+    return self.light_cast_name or self:getName()
 end)
 
 Utils.hook(Spell, "getLightBattleCastMessage", function(orig, self, user, target)
-    return "* " .. user.chara:getName() .. " cast " .. self:getCastName() .. "!"
+    return "* " .. user.chara:getName() .. " cast " .. self:getLightBattleCastName() .. "!"
 end)
 
 Utils.hook(Spell, "onLightBattleSelect", function(orig, self, user, target) end)

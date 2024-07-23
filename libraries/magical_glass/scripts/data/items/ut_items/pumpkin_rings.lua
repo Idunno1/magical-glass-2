@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "mg_item/pumpkin_rings")
+local item, super = Class(LightHealItem, "mg_item/pumpkin_rings")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Pumpkin Rings"
+    -- Name displayed in the normal item select menu
     self.short_name = "PunkRings"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "PmknRings"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -16,6 +18,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 8
 
     -- Default shop price (sell price is halved)
@@ -33,10 +36,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 return item

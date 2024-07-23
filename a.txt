@@ -1,0 +1,14 @@
+mg beta roadmap:
+
+speech bubble text alignment
+
+nobody cares:
+
+short acts
+new choicer using game.battle.soul
+karma
+sort enemyselect with more than 3 enemies, don't otherwise
+
+mgdt:
+
+flavors

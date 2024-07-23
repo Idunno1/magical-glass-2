@@ -24,15 +24,17 @@ function toy_knife:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
     -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         attack = 3
     }
 
+    -- How fast this item's bolts move
     self.bolt_speed = self.bolt_speed * 1.25
+
+    -- The direction this weapon's bolts travel.
+    -- Currently, the multi-battler target object forces this to be left.
     self.bolt_direction = "random"
 end
 

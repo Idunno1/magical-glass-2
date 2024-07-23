@@ -5,7 +5,9 @@ function faded_ribbon:init()
 
     -- Display name
     self.name = "Faded Ribbon"
+    -- Name displayed in the normal item select menu
     self.short_name = "Ribbon"
+    -- Name displayed when used
     self.use_name = "ribbon"
 
     -- Item type (item, key, weapon, armor)
@@ -26,9 +28,8 @@ function faded_ribbon:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 3
     }

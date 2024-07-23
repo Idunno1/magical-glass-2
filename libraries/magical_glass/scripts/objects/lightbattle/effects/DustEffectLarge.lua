@@ -44,4 +44,11 @@ function DustEffectLarge:init(texture, x, y)
     end
 end
 
+function DustEffectLarge:update()
+    super.update(self)
+    if #self.children == 0 then
+        self:remove()
+    end
+end
+
 return DustEffectLarge

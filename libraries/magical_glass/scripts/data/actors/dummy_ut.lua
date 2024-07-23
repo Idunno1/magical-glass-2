@@ -41,12 +41,12 @@ function actor:init()
         ["lightbattle_hurt"] = {"battle/hurt", 1, true},
     }
 
-    self.light_battle_sprite = true
+    self.light_enemy_sprite = true
 
-    self.light_battle_width = 49
-    self.light_battle_height = 53
+    self.light_enemy_width = 49
+    self.light_enemy_height = 53
 
-    self:addLightBattlerPart("body", "battle/body")
+    self:addLightEnemyPart("body", "battle/body")
 end
 
 return actor

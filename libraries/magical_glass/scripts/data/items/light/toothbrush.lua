@@ -5,7 +5,9 @@ function item:init()
 
     -- Display name
     self.name = "Toothbrush"
+    -- Name displayed in the normal item select menu
     self.short_name = "TootBrush"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Toothbrush"
 
     -- Item type (item, key, weapon, armor)
@@ -17,12 +19,13 @@ function item:init()
     self.description = "Keeps the plaque away...\nOr, that's what the dentists say."
 
     -- Light world check text
-    self.check = "Weapon 1 AT\n* Keeps the plaque away...\n* Or, that's what the dentists say."
+    self.check = "Weapon 1 AT\n* Keeps the plaque away...\n* Or, [wait:10]that's what the dentists say."
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    
-    self.price = 30
+
+    -- Default shop price (sell price is halved)
+    self.price = 2
 
     -- Equip bonuses (for weapons and armor)
     self.bonuses = {

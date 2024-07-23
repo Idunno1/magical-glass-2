@@ -6,14 +6,16 @@ function LightBattleEnemySelectItem:init(x, y, options)
     options = options or {}
 
     self.name = DynamicGradientText("", 0, 0, {font = options["name_font"] or "main_mono"})
+    self.name.debug_rect = {0, 0, 0, 0}
     self:addChild(self.name)
 
     self.x_act = Text("", 0, 0, {font = options["x_act_font"] or "main_mono"})
     self.x_act.visible = false
+    self.x_act.debug_rect = {0, 0, 0, 0}
     self:addChild(self.x_act)
 
-    --[[ self.comment = Text("", 75, 0, {font = options["comment_font"] or "main_mono", color = COLORS.gray})
-    self:addChild(self.comment) ]]
+    self.shake = options["shake"] or MagicalGlass.light_battle_text_shake
+    self.shake_power = options["shake_power"] or 1
 
     self.health = nil
     self.max_health = nil
@@ -21,11 +23,15 @@ function LightBattleEnemySelectItem:init(x, y, options)
     self.hide_health = nil
 end
 
+function LightBattleEnemySelectItem:getDebugRectangle()
+    return {0, 0, SCREEN_WIDTH, 32}
+end
+
 function LightBattleEnemySelectItem:setName(name)
     name = "* " .. name
 
-    if MagicalGlass.light_battle_text_shake then
-        self.name:setText("[ut_shake]"..name)
+    if self.shake then
+        self.name:setText("[ut_shake:"..self.shake_power.."]"..name)
     else
         self.name:setText(name)
     end
@@ -51,16 +57,12 @@ function LightBattleEnemySelectItem:setXAction(name, color)
     self.x_act.x = 90 + (name_width * 16)
 
     self.x_act:setColor(Utils.unpackColor(color))
-    if MagicalGlass.light_battle_text_shake then
-        self.x_act:setText("[ut_shake]"..name)
+    if self.shake then
+        self.x_act:setText("[ut_shake:"..self.shake_power.."]"..name)
     else
         self.x_act:setText(name)
     end
 end
-
---[[ function LightBattleEnemySelectItem:setComment(name)
-    self.comment:setText(name)
-end ]]
 
 function LightBattleEnemySelectItem:clear()
     self.name:setText("")
@@ -68,8 +70,6 @@ function LightBattleEnemySelectItem:clear()
 
     self.x_act.x = 0
     self.x_act.visible = false
-
-    --self.comment:setText("")
 
     self.health = nil
     self.max_health = nil

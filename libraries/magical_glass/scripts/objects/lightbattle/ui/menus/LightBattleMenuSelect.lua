@@ -168,10 +168,10 @@ function LightBattleMenuSelect:addMenuItem(item)
         ["tp"] = item.tp or 0,
         ["unusable"] = item.unusable or false,
         ["description"] = item.description or "",
-        ["party"] = item.party or {},
         ["color"] = item.color or nil,
+        ["party"] = item.party or {},
+        ["icons"] = item.icons or {},
         ["data"] = item.data or nil,
-        ["icons"] = item.icons or nil,
         ["callback"] = item.callback or function() end,
     }
     table.insert(self.menu_items, item)
@@ -255,17 +255,18 @@ function LightBattleMenuSelect:refreshText()
                     text:setName(item.name)
                 end
 
-                text:setParty(item.party)
-
                 if not self:canSelectItem(item) then
-                    text:setColor(Utils.unpackColor(COLORS.gray))
+                    text:setNameColor(Utils.unpackColor(COLORS.gray))
                 elseif item.color then
-                    text:setColor(Utils.unpackColor(item.color))
+                    text:setNameColor(Utils.unpackColor(item.color))
                 else
                     if #item.party == 1 then
-                        text:setColor(Game:getPartyMember(item.party[1]):getLightXActColor())
+                        text:setNameColor(Game:getPartyMember(item.party[1]):getLightXActColor())
                     end
                 end
+
+                text:setParty(item.party)
+                text:setIcons(item.icons)
             else
                 text:clear()
             end

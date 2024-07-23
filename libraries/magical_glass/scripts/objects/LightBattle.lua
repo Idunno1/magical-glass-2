@@ -6,6 +6,7 @@ function LightBattle:init()
     super.init(self)
 
     self.solo = MagicalGlass.solo_battles
+    self.encounter_group = nil
 
     self.state = "NONE"
     self.state_reason = nil
@@ -82,7 +83,6 @@ function LightBattle:init()
     self.finished_waves = false
     self.menu_waves = {}
     self.finished_menu_waves = false
-    self.story_wave = nil
 
     self.ui_move_sound = Assets.newSound("ui_move")
     self.ui_select_sound = Assets.newSound("ui_select")
@@ -287,6 +287,11 @@ function LightBattle:postInit(state, encounter)
 
     self.battle_ui = LightBattleUI()
     self.battle_ui.layer = BATTLE_LAYERS["ui"]
+    if self.encounter.story then
+        self.battle_ui:setupStory()
+    else
+        self.battle_ui:setup()
+    end
     self:addChild(self.battle_ui)
 
     if Game.encounter_enemies then
@@ -381,6 +386,53 @@ end
 
 function LightBattle:clearEncounterText()
     self.battle_ui:clearEncounterText()
+end
+
+function LightBattle:powerAct(spell, battler, user, target)
+    local user_battler = self:getPartyBattler(user)
+    local user_index = self:getPartyIndex(user)
+
+    if user_battler == nil then
+        Kristal.Console:error("Invalid power act user: " .. tostring(user))
+        return
+    end
+
+    if type(spell) == "string" then
+        spell = Registry.createSpell(spell)
+    end
+
+    local menu_item = {
+        data = spell,
+        tp = 0
+    }
+
+    if target == nil then
+        if spell.target == "ally" then
+            target = user_battler
+        elseif spell.target == "party" then
+            target = self.party
+        elseif spell.target == "enemy" then
+            target = self:getActiveEnemies()[1]
+        elseif spell.target == "enemies" then
+            target = self:getActiveEnemies()
+        end
+    end
+
+    local name = user_battler.chara:getName()
+    if name == "Ralsei" then
+        -- deltarune inconsistency lol
+        name = "RALSEI"
+    end
+    self:setActText("* Your soul shined its power on\n" .. name .. "!", true)
+
+    self.timer:after(7/30, function()
+        Assets.playSound("boost")
+    end)
+
+    self.timer:after(24/30, function()
+        self:pushAction("SPELL", target, menu_item, user_index)
+        self:markActionAsFinished(nil, {user})
+    end)
 end
 
 function LightBattle:nextTurn()
@@ -541,8 +593,23 @@ function LightBattle:onStateChange(old, new)
     end
 
     if new == "INTRO" then
-        self:nextTurn()
+        if self.encounter.story then
+            self:setState("STORY")
+        else
+            self:nextTurn()
+        end
         self.encounter:onBattleStart()
+        if self.encounter.music then
+            self.music:play(self.encounter.music)
+        end
+    elseif new == "STORY" then
+        self:spawnSoul(self.encounter:getSoulTarget())
+        self.soul.can_move = true
+        if self.encounter:getStoryCutscene() then
+            self:startCutscene(self.encounter:getStoryCutscene()):after(function()
+                self:setState("TRANSITIONOUT")
+            end)
+        end
     elseif new == "ACTIONSELECT" then
         Input.clear("cancel", true)
 
@@ -583,11 +650,20 @@ function LightBattle:onStateChange(old, new)
     elseif new == "PARTYSELECT" then
         self:clearEncounterText()
 
-        if self.state_reason == "ITEM" then
+        if self.state_reason == "SPELL" then
+            if self.solo or #self.party == 1 then
+                self:pushAction("SPELL", self.party[1], self.state_extra["spell"])
+            else
+                print(self.state_extra["spell"].id)
+                print(self.state_extra["spell"].name)
+                print(self.state_extra["spell"].data.id)
+                self.battle_ui:setupSpellPartySelect(self.party, self.state_extra["spell"])
+            end            
+        elseif self.state_reason == "ITEM" then
             if self.solo or #self.party == 1 then
                 self:pushAction("ITEM", self.party[1], self.state_extra["item"])
             else
-                self.battle_ui:setupItemPartySelect(self.state_extra["item"])
+                self.battle_ui:setupItemPartySelect(self.party, self.state_extra["item"])
             end
         end
     elseif new == "MENUSELECT" then
@@ -710,7 +786,9 @@ function LightBattle:onStateChange(old, new)
             end
         end
 
-        self.encounter:onDialogueEnd()
+        if not self.encounter:onDialogueEnd() then
+            self:setState("DEFENDINGBEGIN")
+        end
     elseif new == "DEFENDINGBEGIN" then
         local dont_change = false
         for _,wave in ipairs(self.waves) do
@@ -1046,7 +1124,9 @@ end
 function LightBattle:handleFlee()
     self:resetParty()
 
-    self.encounter:onFlee()
+    if self.encounter:onFlee() then return end
+    
+    Assets.playSound("escaped")
 
     local flee_text
     if not self.used_violence then
@@ -1112,11 +1192,7 @@ function LightBattle:handleFlee()
         end
     end
     
-    if MagicalGlass.light_battle_text_shake then
-        self.battle_ui:setFleeText("[ut_shake]"..flee_text)
-    else
-        self.battle_ui:setFleeText(flee_text)
-    end
+    self.battle_ui:setFleeText(flee_text)
 
     self.soul.collidable = false
     self.soul.y = self.soul.y + 4
@@ -1133,6 +1209,7 @@ function LightBattle:handleVictory()
     self:setSubState("VICTORY")
 
     self:clearEncounterText()
+
     self.battle_ui:clearStack()
     self.battle_ui.action_select:unselect()
 
@@ -1406,7 +1483,7 @@ function LightBattle:commitSingleAction(action)
                 action.result_item = result_item
             else
                 local item = action.data
-                if item:includes(LightEquipItem) and item.swap_equip then
+                if item:includes(LightEquipItem) and item.battle_swap_equip then
                     if self.solo then
                         -- replace weapons and armors instantly in solo mode
                         local replaced
@@ -1548,7 +1625,7 @@ function LightBattle:finishAction(action)
 
     if action.action == "ATTACK" then
         if action.missed and not action.no_miss then
-            action.target:hurt(0, battler, false)
+            action.target:hurt(0, battler, nil, false)
         elseif action.final_damage then
             local sound = action.target:getDamageSound() or "damage"
             if sound then
@@ -1950,6 +2027,8 @@ end
 function LightBattle:startCutscene(group, id, ...)
     if not self.encounter.story then
         self:toggleSoul(false)
+        self.battle_ui:clearStack()
+        self.battle_ui.action_select:unselect()
     end
 
     if self.cutscene then
@@ -2259,11 +2338,13 @@ function LightBattle:checkGameOver()
 end
 
 function LightBattle:returnToWorld()
-    if not Game:getConfig("keepTensionAfterBattle") then
+    if not MagicalGlass:getConfig("keepTensionAfterLightBattles") then
         Game:setTension(0)
     end
 
-    self.encounter:setFlag("done", true)
+    if self.encounter.id ~= "_nobody" then
+        self.encounter:setFlag("done", true)
+    end
 
     local enemies = {}
     for k,v in pairs(self.enemy_world_characters) do
@@ -2318,7 +2399,10 @@ function LightBattle:onKeyPressed(key)
                 Input.clear(nil, true)
                 --self.forced_victory = true
                 if self.state == "DEFENDING" then
-                    self.encounter:onWavesDone()
+                    if not self.encounter:onWavesDone() then
+                        self:toggleSoul(false)
+                        self:setState("DEFENDINGEND", "WAVEENDED")
+                    end
                 end
                 self:setState("VICTORY")
             end
@@ -2335,7 +2419,10 @@ function LightBattle:onKeyPressed(key)
             end
             -- Insta-end the DEFENDING phase
             if key == "f" and self.state == "DEFENDING" then
-                self.encounter:onWavesDone()
+                if not self.encounter:onWavesDone() then
+                    self:toggleSoul(false)
+                    self:setState("DEFENDINGEND", "WAVEENDED")
+                end
             end
             -- "You dare bring light into my lair? You must die!" -Ganon 1993
             if key == "j" and Input.shift() then
@@ -2503,7 +2590,10 @@ function LightBattle:updateWaves()
 
     if all_done and not self.finished_waves then
         self.finished_waves = true
-        self.encounter:onWavesDone()
+        if not self.encounter:onWavesDone() then
+            self:toggleSoul(false)
+            self:setState("DEFENDINGEND", "WAVEENDED")
+        end
     end
 end
 

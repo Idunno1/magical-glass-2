@@ -1,35 +1,53 @@
 Utils.hook(LightEquipItem, "init", function(orig, self)
     LightEquipItem.__super.init(self)
 
+    -- This needs to be "ally" due to how light world equipping works.
     self.target = "ally"
 
-    self.equip_display_name = nil
+    -- Name displayed in the light world stat menu
+    self.equip_name = nil
 
-    self.heal_bonus = 0
-    self.flee_bonus = 0
-    self.inv_bonus = 0
-
+    -- The amount of bolts spawned when attacking.
+    -- Having more than 1 changes point calculation.
     self.bolt_count = 1
 
+    -- How fast this item's bolts move
     self.bolt_speed = 11
+    -- A random bonus added to this item's bolt speed.
+    -- For example, if bolt_speed is 11, setting this to 2 would result
+    -- in the speed being a floating point number anywhere between 11-13. 
     self.bolt_speed_variance = 2
 
-    self.bolt_start = -16 -- number or table of where the bolt spawns. if it's a table, a value is chosen randomly
-    self.multibolt_variance = 50
+    -- An offset to where this item's bolt spawns.
+    -- If it's a table, a random value will be picked from said table.
+    self.bolt_start = -16
+    -- A table of numbers or tables that determine where bolts spawned after
+    -- the first bolt should spawn.
+    -- Number entries always place a bolt in a certain positions, table entries
+    -- will get a random value picked from them.
+    self.multibolt_variance = 10
+    -- Whether bolts after the first should be spawned relative to the first bolt.
     self.relative_multibolt_variance = false
 
+    -- The direction this weapon's bolts travel.
+    -- Currently, the multi-battler target object forces this to be left.
     self.bolt_direction = "right" -- "right", "left", or "random"
 
+    -- The texture/animation used when attacking an enemy if onLightBattleAttack isn't
+    -- overwritten.
     self.attack_sprite = "effects/attack/strike"
+    -- The sound played when attacking if onLightBattleAttack isn't overwritten.
     self.attack_sound = "laz_c"
+    -- The pitch of this item's attack sound.
     self.attack_pitch = 1
 
-    self.swap_equip = true
+    -- Whether this item should be equipped when used in battles
+    self.battle_swap_equip = true
 end)
 
-Utils.hook(LightEquipItem, "getEquipDisplayName", function(orig, self)
-    if self.equip_display_name then
-        return self.equip_display_name
+Utils.hook(LightEquipItem, "getEquipName", function(orig, self)
+    if self.equip_name then
+        return self.equip_name
     else
         return self:getName()
     end
@@ -40,7 +58,7 @@ Utils.hook(LightEquipItem, "getBoltCount", function(orig, self)
 end)
 
 Utils.hook(LightEquipItem, "getBoltSpeed", function(orig, self)
-    return self.bolt_speed + Utils.random(0, self:getBoltSpeedVariance(), 1)
+    return self.bolt_speed + Utils.random(self:getBoltSpeedVariance())
 end)
 
 Utils.hook(LightEquipItem, "getBoltSpeedVariance", function(orig, self)
@@ -79,9 +97,9 @@ Utils.hook(LightEquipItem, "getAttackPitch", function(orig, self)
     return self.attack_pitch
 end)
 
-Utils.hook(LightEquipItem, "applyHealBonus", function(orig, self, amount) return amount or 0 + self.heal_bonus end)
-Utils.hook(LightEquipItem, "applyFleeBonus", function(orig, self, amount) return amount or 0 + self.flee_bonus end)
-Utils.hook(LightEquipItem, "applyInvBonus", function(orig, self, amount) return amount or 0 + self.inv_bonus end)
+Utils.hook(LightEquipItem, "applyHealBonus", function(orig, self, amount) return (amount or 0) + self:getStatBonus("heal") end)
+Utils.hook(LightEquipItem, "applyFleeBonus", function(orig, self, amount) return (amount or 0) + self:getStatBonus("flee") end)
+Utils.hook(LightEquipItem, "applyInvBonus", function(orig, self, amount) return (amount or 0) + self:getStatBonus("inv") end)
 
 Utils.hook(LightEquipItem, "onWorldUse", function(orig, self, target)
     self:playWorldUseSound(target)
@@ -110,7 +128,7 @@ Utils.hook(LightEquipItem, "onWorldUse", function(orig, self, target)
 end)
 
 Utils.hook(LightEquipItem, "showEquipText", function(orig, self, target)
-    Game.world:showText("* " .. target:getNameOrYou() .. " equipped the " .. self:getName() .. ".")
+    Game.world:showText("* " .. target:getNameOrYou() .. " equipped the " .. self:getUseName() .. ".")
 end)
 
 Utils.hook(LightEquipItem, "onLightBattleNextTurn", function(orig, self, battler, turn) end)
@@ -133,15 +151,16 @@ Utils.hook(LightEquipItem, "onLightBattleAttack", function(orig, self, battler, 
     end
 
     local x, y = enemy:getRelativePos((enemy.width / 2) - 5, (enemy.height / 2) - 5)
-    local anim = BasicAttackAnim(x, y, nil, stretch, {sound = self:getAttackSound(), after = after_func})
+    local anim = BasicAttackAnim(x, y, self:getAttackSprite(), stretch, {sound = self:getAttackSound(), after = after_func})
     Game.battle:addChild(anim)
 
     -- should finish action automatically, damage override, don't damage enemy when the attack ends
     return false
 end)
 
-Utils.hook(LightEquipItem, "onLightBattleMiss", function(orig, self, battler, enemy) end)
+Utils.hook(LightEquipItem, "onLightBattleMiss", function(orig, self, battler, enemy)
     -- should finish action automatically, don't hit for 0 damage when the attack ends
+end)
 
 Utils.hook(LightEquipItem, "playWorldUseSound", function(orig, self, target)
     Assets.playSound("item")

@@ -80,11 +80,14 @@ function LightBattleEnemySelect:setup(enemies, options)
     end
 
     if self.cursor_memory then
-        if self.current_enemy > #self.enemies then
-            self.current_enemy = 1
-        end
+        local give_up = 0
         while not self:canSelectEnemy(self:getCurrentEnemy()) do
             self.current_enemy = self.current_enemy + 1
+            give_up = give_up + 1
+            if give_up >= 100 then
+                self.current_enemy = 1
+                break 
+            end
         end
     else
         self.current_enemy = 1

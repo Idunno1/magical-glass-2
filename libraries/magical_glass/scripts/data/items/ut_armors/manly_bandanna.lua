@@ -5,7 +5,9 @@ function manly_bandanna:init()
 
     -- Display name
     self.name = "Manly Bandanna"
+    -- Name displayed in the normal item select menu
     self.short_name = "Mandanna"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Bandanna"
 
     -- Item type (item, key, weapon, armor)
@@ -30,9 +32,8 @@ function manly_bandanna:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
+    -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         defense = 7
     }

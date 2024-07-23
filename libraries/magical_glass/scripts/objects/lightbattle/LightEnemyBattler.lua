@@ -1,13 +1,13 @@
 local LightEnemyBattler, super = Class(Battler, "LightEnemyBattler")
 
-function LightEnemyBattler:init(actor, use_overlay)
+function LightEnemyBattler:init(actor)
     super.init(self)
     -- This enemy's name.
     -- Associated getter: getName (string)
     self.name = "Test Enemy"
 
     if actor then
-        self:setActor(actor, use_overlay)
+        self:setActor(actor)
     end
 
     self.max_health = 100
@@ -41,9 +41,9 @@ function LightEnemyBattler:init(actor, use_overlay)
     self.large_vapor = false
 
     -- Whether this enemy runs away instead of turning to dust.
-    self.run_on_defeat = false
+    self.run_on_defeat = true
     -- Whether this enemy can be frozen.
-    self.can_freeze = false
+    self.can_freeze = true
 
     -- Whether this enemy can be selected or not.
     self.selectable = true
@@ -239,6 +239,12 @@ function LightEnemyBattler:getAttackTension(points)
     return points / 25
 end
 
+function LightEnemyBattler:getSpritePart(part)
+    if self.sprite:includes(LightEnemySprite) then
+        return self.sprite.sprite_parts[part]
+    end
+end
+
 -- Callbacks
 
 function LightEnemyBattler:onCheck(battler) end
@@ -278,14 +284,10 @@ end
 
 function LightEnemyBattler:onSpareable() end
 function LightEnemyBattler:onSpared()
-    if self.actor.use_light_battler_sprite then
-        if self.actor:getAnimation("lightbattle_spared") then
-            self.overlay_sprite:setAnimation("lightbattle_spared")
-        else
-            self.overlay_sprite:setAnimation("lightbattle_hurt")
-        end
+    if self.actor:getAnimation("lightbattle_spared") then
+        self:setAnimation("lightbattle_spared")
     else
-        self.overlay_sprite:setAnimation("spared")
+        self:setAnimation("lightbattle_hurt")
     end
 end
 
@@ -293,21 +295,21 @@ function LightEnemyBattler:onHurt(damage, battler)
     battler.chara:onLightBattleAttackHit(self, damage)
 
     self:toggleOverlay(true)
-    if self.actor.light_battle_sprite then
-        if not self:getActiveSprite():setAnimation("lightbattle_hurt") then
+    if self.actor.light_enemy_sprite then
+        if not self:setAnimation("lightbattle_hurt") then
             self:toggleOverlay(false)
         end
     else
-        if not self:getActiveSprite():setAnimation("hurt") then
+        if not self:setAnimation("hurt") then
             self:toggleOverlay(false)
         end
     end
 
-    self:getActiveSprite():shake(9, 0, 0.5, 2/30) -- still not sure if this should be different
+    self:shake(9, 0, 0.5, 2/30) -- still not sure if this should be different
 
     Game.battle.timer:after(1/3, function()
         local sound = self:getDamageVoice()
-        if sound and type(sound) == "string" and not self:getActiveSprite().frozen then
+        if sound and type(sound) == "string" and not self.overlay_sprite.frozen then
             Assets.stopAndPlaySound(sound)
         end
     end)
@@ -322,7 +324,7 @@ function LightEnemyBattler:onHurt(damage, battler)
 end
 
 function LightEnemyBattler:onHurtEnd()
-    self:getActiveSprite():stopShake()
+    self:stopShake()
     if self.health > 0 or not self.remove_on_defeat then
         self:toggleOverlay(false, true)
     end
@@ -332,7 +334,7 @@ function LightEnemyBattler:onDodge(battler, attacked) end
 
 function LightEnemyBattler:onDefeatSpared(pacified)
     self:toggleOverlay(true)
-    self:getActiveSprite().alpha = 0.5
+    self.overlay_sprite.alpha = 0.5
     Assets.playSound("vaporized")
 
     for i = 0, 15 do
@@ -358,9 +360,9 @@ function LightEnemyBattler:onDefeat(damage, battler)
         self.done_state = "DEFEATED"
         self:toggleOverlay(true)
         if self.actor:getAnimation("lightbattle_defeat") then
-            sprite:setAnimation("lightbattle_defeat")
+            self:setAnimation("lightbattle_defeat")
         else
-            sprite:setAnimation("lightbattle_hurt")
+            self:setAnimation("lightbattle_hurt")
         end
     end
 end
@@ -371,16 +373,20 @@ function LightEnemyBattler:onDefeatVaporized(damage, battler)
     self.hurt_timer = -1
     self.defeated = true
 
+    self:stopShake()
+
     Assets.playSound("vaporized")
 
-    local sprite = self:getActiveSprite()
     if self.actor:getAnimation("lightbattle_defeat") then
-        sprite:setAnimation("lightbattle_defeat")
+        self:setAnimation("lightbattle_defeat")
     else
-        sprite:setAnimation("lightbattle_hurt")
+        self:setAnimation("lightbattle_hurt")
     end
-    sprite.visible = false
 
+    self.sprite.visible = false
+    self.overlay_sprite.visible = false
+
+    local sprite = self.overlay_sprite
     local vapor
     if self.large_vapor then
         vapor = DustEffectLarge(sprite:getTexture(), sprite:getRelativePos(0, 0, self))
@@ -399,7 +405,14 @@ function LightEnemyBattler:onDefeatRun(damage, battler)
     self.hurt_timer = -1
     self.defeated = true
 
-    Assets.playSound("defeatrun")
+    Assets.playSound("escaped")
+    Assets.playSound("escaped")
+
+    if self.actor:getAnimation("lightbattle_run") then
+        self:setAnimation("lightbattle_run")
+    else
+        self:setAnimation("lightbattle_hurt")
+    end
 
     local sweat = Sprite("effects/defeat/sweat")
     sweat:setOrigin(0.5, 0.5)
@@ -407,14 +420,12 @@ function LightEnemyBattler:onDefeatRun(damage, battler)
     sweat.layer = 100
     self:addChild(sweat)
 
-    Game.battle.timer:after(15/30, function()
-        sweat:remove()
-        -- maybe don't hook actorsprite this time?
-        -- self:getActiveSprite().run_away_light = true
+    local direction = Utils.pick({0, 180})
+    self.physics.direction = math.rad(direction)
+    self.physics.speed = 15
 
-        Game.battle.timer:after(15/30, function()
-            self:remove()
-        end)
+    Game.battle.timer:after(2, function()
+        self:remove()
     end)
 
     self:defeat("VIOLENCED", true)
@@ -422,31 +433,95 @@ end
 
 -- Functions
 
-function LightEnemyBattler:setActor(actor, use_overlay)
+function LightEnemyBattler:setActor(actor)
     if type(actor) == "string" then
         self.actor = Registry.createActor(actor)
     else
         self.actor = actor
     end
 
-    self.width = self.actor:getWidth()
-    self.height = self.actor:getHeight()
-
     if self.sprite         then self:removeChild(self.sprite)         end
     if self.overlay_sprite then self:removeChild(self.overlay_sprite) end
 
-    if self.actor.light_battle_sprite then
-        self.sprite = self.actor:createLightBattleSprite()
+    if self.actor.light_enemy_sprite then
+        self.sprite = self.actor:createLightEnemySprite()
+
+        self.width = self.actor:getLightEnemyWidth()
+        self.height = self.actor:getLightEnemyHeight()
     else
         self.sprite = self.actor:createSprite()
+
+        self.width = self.actor:getWidth()
+        self.height = self.actor:getHeight()
     end
     self:addChild(self.sprite)
 
-    if use_overlay ~= false then
-        self.overlay_sprite = self.actor:createSprite()
-        self.overlay_sprite.visible = false
-        self:addChild(self.overlay_sprite)
+    self.overlay_sprite = self.actor:createSprite()
+    self.overlay_sprite.visible = false
+    self:addChild(self.overlay_sprite)
+end
+
+function LightEnemyBattler:toggleOverlay(overlay)
+    if overlay == nil then
+        overlay = self.sprite.visible
     end
+    self.overlay_sprite.visible = overlay
+    self.sprite.visible = not overlay
+end
+
+function LightEnemyBattler:callPartFunction(part, func_id, ...)
+    if self.sprite:includes(LightEnemySprite) then
+        self.sprite.sprite_parts:callPartFunction(part, func_id, ...)
+    end
+end
+
+function LightEnemyBattler:setCustomSprite(texture, ox, oy, keep_anim)
+    if self.sprite:includes(LightEnemySprite) then
+        self:toggleOverlay(true)
+        self.overlay_sprite:setCustomSprite(texture, ox, oy, keep_anim)
+    end
+end
+
+function LightEnemyBattler:set(name, callback, ignore_actor_callback)
+    if self.sprite:includes(LightEnemySprite) then
+        if not ignore_actor_callback and self.actor:preLightEnemySet(self.sprite, self.overlay_sprite, name, callback) then
+            return
+        end    
+        self:toggleOverlay(true)
+        self.overlay_sprite:set(name, callback, ignore_actor_callback)
+        self.actor:onLightEnemySet(self.sprite, self.overlay_sprite, name, callback)
+    end
+end
+
+function LightEnemyBattler:setAnimation(anim, callback, ignore_actor_callback)
+    if self.sprite:includes(LightEnemySprite) then
+        if not ignore_actor_callback and self.actor:preLightEnemySetAnim(self.sprite, self.overlay_sprite, anim, callback) then
+            return
+        end    
+        self:toggleOverlay(true)
+        local result = self.overlay_sprite:setAnimation(anim, callback, ignore_actor_callback)
+        self.actor:onLightEnemySetAnim(self.sprite, self.overlay_sprite, anim, callback)
+        return result
+    end
+end
+
+function LightEnemyBattler:setSprite(texture, keep_anim, ignore_actor_callback)
+    if self.sprite:includes(LightEnemySprite) then
+        if not ignore_actor_callback and self.actor:preLightEnemySetSprite(self.sprite, self.overlay_sprite, texture, keep_anim) then
+            return
+        end    
+        self:toggleOverlay(true)
+        self.overlay_sprite:setSprite(anim, callback, ignore_actor_callback)
+        self.actor:onLightEnemySetSprite(self.sprite, self.overlay_sprite, texture, keep_anim)
+    end
+end
+
+function LightEnemyBattler:shake(...)
+    self:getActiveSprite():shake(...)
+end
+
+function LightEnemyBattler:stopShake()
+    self:getActiveSprite():stopShake()
 end
 
 function LightEnemyBattler:setTired(bool)
@@ -511,10 +586,18 @@ function LightEnemyBattler:spawnSpeechBubble(text, options)
     local bubble
     local x, y
     if options["flip"] then
-        x, y = self.sprite:getRelativePos(self.actor:getWidth(), self.actor:getHeight() / 2, Game.battle)
+        local w, h = self.actor:getLightEnemyWidth(), self.actor:getLightEnemyHeight()
+        if self.sprite:includes(ActorSprite) then
+            w, h = self.actor:getWidth(), self.actor:getHeight()
+        end
+        x, y = self.sprite:getRelativePos(w, h / 2, Game.battle)
         options = Utils.merge({right = true}, options)
     else
-        x, y = self.sprite:getRelativePos(0, self.actor:getHeight() / 2, Game.battle)
+        local h = self.actor:getLightEnemyWidth(), self.actor:getLightEnemyHeight()
+        if self.sprite:includes(ActorSprite) then
+            h = self.actor:getWidth(), self.actor:getHeight()
+        end
+        x, y = self.sprite:getRelativePos(0, h / 2, Game.battle)
     end
     x, y = x - self.dialogue_offset[1], y + self.dialogue_offset[2]
     bubble = UnderSpeechBubble(text, x, y, options, self)
@@ -533,7 +616,7 @@ function LightEnemyBattler:spawnSpeechBubble(text, options)
     return bubble
 end
 
-function LightEnemyBattler:registerAct(name, description, party, tp, highlight, icons)
+function LightEnemyBattler:registerAct(name, description, party, tp, icons)
     if type(party) == "string" then
         if party == "all" then
             party = {}
@@ -557,7 +640,7 @@ function LightEnemyBattler:registerAct(name, description, party, tp, highlight, 
     return act
 end
 
-function LightEnemyBattler:registerShortAct(name, description, party, tp, highlight, icons)
+--[[ function LightEnemyBattler:registerShortAct(name, description, party, tp, icons)
     if type(party) == "string" then
         if party == "all" then
             party = {}
@@ -579,9 +662,9 @@ function LightEnemyBattler:registerShortAct(name, description, party, tp, highli
     }
     table.insert(self.acts, act)
     return act
-end
+end ]]
 
-function LightEnemyBattler:registerActFor(char, name, description, party, tp, highlight, icons)
+function LightEnemyBattler:registerActFor(char, name, description, party, tp, icons)
     if type(party) == "string" then
         if party == "all" then
             party = {}
@@ -604,7 +687,7 @@ function LightEnemyBattler:registerActFor(char, name, description, party, tp, hi
     table.insert(self.acts, act)
 end
 
-function LightEnemyBattler:registerShortActFor(char, name, description, party, tp, highlight, icons)
+--[[ function LightEnemyBattler:registerShortActFor(char, name, description, party, tp, icons)
     if type(party) == "string" then
         if party == "all" then
             party = {}
@@ -625,7 +708,7 @@ function LightEnemyBattler:registerShortActFor(char, name, description, party, t
         ["icons"] = icons
     }
     table.insert(self.acts, act)
-end
+end ]]
 
 function LightEnemyBattler:removeAct(name)
     for i,act in ipairs(self.acts) do
@@ -713,17 +796,18 @@ function LightEnemyBattler:heal(amount)
     end
 end
 
-function LightEnemyBattler:hurt(amount, battler, attacked, on_defeat, color, show_status)
+function LightEnemyBattler:hurt(amount, battler, on_defeat, options)
+    options = options or {}
     if amount <= 0 then
         if attacked then self.hurt_timer = 1 end
-        if show_status or show_status == nil then
-            self:lightStatusMessage("msg", "miss", {dont_animate = not attacked})
+        if not options["show_status"] then
+            self:lightStatusMessage("msg", "miss", {color = options["color"] or COLORS.red, dont_animate = not options["attacked"]})
         end
-        self:onDodge(battler, attacked)
+        self:onDodge(battler, options["attacked"])
         return
     end
 
-    if show_status or show_status == nil then
+    if not options["show_status"] then
         self:lightStatusMessage("damage", amount)
     end
 
@@ -741,9 +825,6 @@ function LightEnemyBattler:checkHealth(on_defeat, amount, battler)
     -- on_defeat is optional
     if self.health <= 0 then
         self.health = 0
-        if self.remove_on_defeat then
-            self.done_state = "FALLENDOWN"
-        end
 
         if not self.defeated then
             if on_defeat then
@@ -778,22 +859,22 @@ function LightEnemyBattler:freeze()
 
     self:toggleOverlay(true)
 
-    local sprite = self:getActiveSprite()
-    if not sprite:setAnimation("frozen") then
-        sprite:setAnimation("hurt")
+    if not self:setAnimation("lightbattle_frozen") then
+        self:setAnimation("lightbattle_hurt")
     end
-    sprite:stopShake()
+    self:stopShake()
 
-    local message = self:lightStatusMessage("msg", "frozen", {58/255, 147/255, 254/255}, true)
+    local message = self:lightStatusMessage("msg", "frozen")
     message.y = message.y + 60
     message:resetPhysics()
 
     self.hurt_timer = -1
+    self.sprite.visible = false
 
-    sprite.frozen = true
-    sprite.freeze_progress = 0
+    self.overlay_sprite.frozen = true
+    self.overlay_sprite.freeze_progress = 0
 
-    Game.battle.timer:tween(20/30, sprite, {freeze_progress = 1})
+    Game.battle.timer:tween(20/30, self.overlay_sprite, {freeze_progress = 1})
 
     Game.battle.money = Game.battle.money + 24
     
@@ -806,8 +887,10 @@ function LightEnemyBattler:defeat(reason, violent)
     if violent then
         Game.battle.used_violence = true
         if self.done_state == "KILLED" or self.done_state == "FROZEN" then
-            -- do this better
-            -- MagicalGlassLib.kills = MagicalGlassLib.kills + 1
+            if Game.battle.encounter_group then
+                Game.battle.encounter_group:onEnemyKilled(self)
+            end
+            MagicalGlass.kills = MagicalGlass.kills + 1
             Game.battle.exp = Game.battle.exp + self:getEXP()
         end
     end

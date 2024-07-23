@@ -101,16 +101,19 @@ Utils.hook(LightStatMenu, "draw", function(orig, self)
     local weapon_name = "None"
     local armor_name = "None"
     if chara:getWeapon() then
-        weapon_name = chara:getWeapon():getEquipDisplayName() or chara:getWeapon():getName()
+        weapon_name = chara:getWeapon():getEquipName() or chara:getWeapon():getName()
     end
     if chara:getArmor(1) then
-        armor_name =  chara:getArmor(1):getEquipDisplayName() or chara:getArmor(1):getName()
+        armor_name =  chara:getArmor(1):getEquipName() or chara:getArmor(1):getName()
     end
 
     love.graphics.print("WEAPON: " .. weapon_name, 4, 256)
     love.graphics.print("ARMOR: "  .. armor_name,  4, 288)
 
     love.graphics.print(Game:getConfig("lightCurrency"):upper() .. ": " .. Game.lw_money, 4, 328)
+    if MagicalGlass.kills > 20 then
+        love.graphics.print("KILLS: " .. MagicalGlass.kills, 172, 328)
+    end
 
     LightStatMenu.__super.draw(self)
 end)

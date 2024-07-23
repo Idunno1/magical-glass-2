@@ -1,19 +1,22 @@
-local croquet_roll, super = Class(HealItem, "mg_item/croquet_roll")
+local item, super = Class(LightHealItem, "mg_item/croquet_roll")
 
-function croquet_roll:init()
+function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Croquet Roll"
+    -- Name displayed in the normal item select menu
     self.short_name = "CroqtRoll"
 
     -- How this item is used on you (ate, drank, eat, etc.)
     self.use_method = "ate"
+    
     -- Item type (item, key, weapon, armor)
     self.type = "item"
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 15
 
     -- Default shop sell price
@@ -31,13 +34,9 @@ function croquet_roll:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
-function croquet_roll:getWorldUseText(target)
+function item:getWorldUseText(target)
     if target.you then
         return "* You hit the Croquet Roll into \nyour mouth."
     else
@@ -45,7 +44,7 @@ function croquet_roll:getWorldUseText(target)
     end
 end
 
-function croquet_roll:getLightBattleText(user, target)
+function item:getLightBattleText(user, target)
     if Game.battle.encounter.serious then
         return super.getLightBattleText(self, user, target)
     else
@@ -54,9 +53,13 @@ function croquet_roll:getLightBattleText(user, target)
         elseif user.chara.id == target.chara.id then
             return "* " .. user.chara:getName() .. " hit the Croquet Roll into \ntheir mouth."
         else
-            return "* " .. user.chara:getNameorYou() .. " hit the Croquet Roll into \n"..target.chara:getName().."'s mouth."
+            if target.chara.you then
+                return "* " .. user.chara:getNameOrYou() .. " hit the Croquet Roll into \nyour mouth."
+            else
+                return "* " .. user.chara:getNameOrYou() .. " hit the Croquet Roll into \n"..target.chara:getName().."'s mouth."
+            end
         end
     end
 end
 
-return croquet_roll
+return item

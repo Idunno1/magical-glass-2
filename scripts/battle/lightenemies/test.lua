@@ -6,12 +6,8 @@ function test:init()
     self.name = "test"
     self:setActor("dummy_ut")
 
-    self:registerAct("a", nil, {"susie"})
-    self:registerAct("b", nil)
-    self:registerAct("c", nil)
-    self:registerAct("d", nil)
-    self:registerAct("e", nil)
-    self:registerAct("f", nil)
+    self:registerAct("Red Buster", nil, {"susie"}, 60)
+    self:registerAct("dumbass", "", {"susie", "noelle"})
 
     self.exp = 200
 
@@ -31,12 +27,8 @@ function test:init()
 end
 
 function test:onAct(battler, name)
-    if name == "hi" then
-        self:addMercy(100)
-        return "* hi"
-    elseif name == "Standard" then
-        self:addMercy(50)
-        return "* Standard"
+    if name == "Red Buster" then
+        Game.battle:powerAct("red_buster", "kris", "susie", self)
     end
 
     return super.onAct(self, battler, name)

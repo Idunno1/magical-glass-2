@@ -6,20 +6,26 @@ function LightBattlePartySelectItem:init(x, y, options)
     options = options or {}
 
     self.name = Text("", 0, 0, {font = options["name_font"] or "main_mono"})
+    self.name.debug_rect = {0, 0, 0, 0}
     self:addChild(self.name)
+
+    self.shake = options["shake"] or MagicalGlass.light_battle_text_shake
+    self.shake_power = options["shake_power"] or 1
 
     self.health = nil
     self.max_health = nil
 end
 
+function LightBattlePartySelectItem:getDebugRectangle()
+    return {0, 0, SCREEN_WIDTH, 32}
+end
+
 function LightBattlePartySelectItem:setName(name)
     name = "* " .. name
-
-    if MagicalGlass.light_battle_text_shake then
-        self.name:setText("[ut_shake]"..name)
-    else
-        self.name:setText(name)
+    if self.shake then
+        name = "[ut_shake:"..self.shake_power.."]" .. name
     end
+    self.name:setText(name)
 end
 
 function LightBattlePartySelectItem:clear()

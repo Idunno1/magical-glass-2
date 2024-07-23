@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "mg_item/unisicle")
+local item, super = Class(LightHealItem, "mg_item/unisicle")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Unisicle"
+    -- Name displayed in the normal item select menu
     self.short_name = "Unisicle" -- getname moment
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Popsicle"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -35,10 +37,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 return item

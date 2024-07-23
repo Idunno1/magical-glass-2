@@ -28,10 +28,6 @@ function item:init()
     self.target = "none"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:onWorldUse(target)
@@ -98,6 +94,7 @@ function item:onLightBattleUse(user, target)
         Assets.playSound("dogresidue")
     end)
 
+    local text = self:getLightBattleText(user, target)
     while #Game.inventory:getStorage("items") < Game.inventory:getStorage("items").max do
         local items = {
             "mg_item/dog_salad",
@@ -110,7 +107,7 @@ function item:onLightBattleUse(user, target)
         }
         Game.inventory:addItem(Utils.pick(items))
     end
-    Game.battle:battleText(self:getLightBattleText(user, target))
+    Game.battle:battleText(text)
     return true
 end
 

@@ -5,8 +5,11 @@ function worn_dagger:init()
 
     -- Display name
     self.name = "Worn Dagger"
+    -- Name displayed in the normal item select menu
     self.short_name = "WornDG"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "W. Dagger"
+    -- Name displayed when used
     self.use_name = "dagger"
 
     -- Item type (item, key, weapon, armor)
@@ -27,19 +30,15 @@ function worn_dagger:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
 
     -- Equip bonuses (for weapons and armor)
     self.bonuses = {
         attack = 15
     }
-
+    
+    -- The direction this weapon's bolts travel.
+    -- Currently, the multi-battler target object forces this to be left.
     self.bolt_direction = "random"
-end
-
-function worn_dagger:showEquipText(target)
-    Game.world:showText("* " .. target:getNameOrYou() .. " equipped the dagger.")
 end
 
 return worn_dagger

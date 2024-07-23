@@ -1,12 +1,15 @@
-local item, super = Class(HealItem, "mg_item/abandoned_quiche")
+local item, super = Class(LightHealItem, "mg_item/abandoned_quiche")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Abandoned Quiche"
+    -- Name displayed in the normal item select menu
     self.short_name = "Ab Quiche"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "Quiche"
+    -- Name displayed when used
     self.use_name = "quiche"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -19,6 +22,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 34
 
     -- Default shop sell price
@@ -26,7 +30,7 @@ function item:init()
     -- Whether the item can be sold
     self.can_sell = true
 
-    -- Item description text (for the debug menu)
+    -- Item description text (unused by light items outside of the debug menu)
     self.description = "A psychologically damaged spinach egg pie."
 
     -- Light world check text
@@ -36,10 +40,6 @@ function item:init()
     self.target = "ally"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:onToss()

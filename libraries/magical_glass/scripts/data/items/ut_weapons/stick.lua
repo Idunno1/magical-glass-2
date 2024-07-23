@@ -11,6 +11,7 @@ function stick:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Consumable target mode (ally, party, enemy, enemies, or none)
     self.target = "none"
 
     -- Default shop sell price
@@ -25,8 +26,9 @@ function stick:init()
 
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
+
+    -- Whether this item should be equipped when used in battles
+    self.battle_swap_equip = false
 end
 
 function stick:onWorldUse(target)

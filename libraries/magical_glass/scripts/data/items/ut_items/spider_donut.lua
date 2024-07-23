@@ -1,11 +1,13 @@
-local item, super = Class(HealItem, "mg_item/spider_donut")
+local item, super = Class(LightHealItem, "mg_item/spider_donut")
 
 function item:init()
     super.init(self)
 
     -- Display name
     self.name = "Spider Donut"
+    -- Name displayed in the normal item select menu
     self.short_name = "SpidrDont"
+    -- Name displayed in the normal item select menu during a serious encounter
     self.serious_name = "SpidrDonut"
 
     -- How this item is used on you (ate, drank, eat, etc.)
@@ -15,6 +17,7 @@ function item:init()
     -- Whether this item is for the light world
     self.light = true
 
+    -- Amount this item heals
     self.heal_amount = 12
 
     -- Default shop price (sell price is halved)
@@ -34,10 +37,6 @@ function item:init()
     self.target = "party"
     -- Where this item can be used (world, battle, all, or none)
     self.usable_in = "all"
-    -- Item this item will get turned into when consumed
-    self.result_item = nil
-    -- Will this item be instantly consumed in battles?
-    self.instant = false
 end
 
 function item:getLightBattleText(user, target)
