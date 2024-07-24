@@ -8,7 +8,7 @@ function BasicAttackAnim:init(x, y, texture, stretch, options)
     self.layer = BATTLE_LAYERS["above_ui"] + 5
 
     self.stretch = stretch
-    if not Game.battle.allow_party then
+    if Game.battle.allow_party then
         self.stretch = nil
     end
 
