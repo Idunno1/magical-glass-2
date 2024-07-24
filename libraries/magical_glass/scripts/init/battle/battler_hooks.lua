@@ -31,7 +31,12 @@ Utils.hook(Battler, "lightStatusMessage", function(orig, self, x, y, msg_type, a
     if options["show_gauge"] or true then
         if (msg_type == "mercy" and show_mercy) or msg_type == "damage" or msg_type == "heal" then
             if self.gauge then
-                self.gauge:remove()
+                if msg_type == "mercy" or msg_type == "heal" then 
+                    self.gauge.gauge_target = self.gauge.gauge_target + arg
+                elseif msg_type == "damage" then
+                    self.gauge.gauge_target = self.gauge.gauge_target - arg
+                end
+                return
             end
 
             local gauge

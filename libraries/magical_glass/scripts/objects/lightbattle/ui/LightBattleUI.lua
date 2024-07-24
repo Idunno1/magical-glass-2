@@ -216,11 +216,14 @@ function LightBattleUI:setupACTSelect(enemy, acts)
             ["name"] = iact.name,
             ["tp"] = iact.tp or 0,
             ["description"] = iact.description,
+            ["unusable"] = iact.unusable or false,
             ["party"] = iact.party,
             ["color"] = iact.color,
             ["icons"] = iact.icons,
-            ["callback"] = function(iact, menu_item)
-                Game.battle:pushAction("ACT", enemy, menu_item)
+            ["callback"] = function(iact, menu_item, can_select)
+                if can_select then
+                    Game.battle:pushAction("ACT", enemy, menu_item)
+                end
             end
         }
         table.insert(menu_items, act)

@@ -14,10 +14,11 @@
     // Change mg's config options in your mod.json
     "config": {
         "defaultBattleSystem": "undertale",
-        "soloBattles": false,
+        "allowPartyMembers": true,
+        
         "keepTensionAfterLightBattles": false,
-        "lightSpeechBubble": "ut_large",
         "lightWorldUndertaleText": true,
+        "lightSpeechBubble": "ut_large",
 
         "lightBattleTensionDefault": true,
         "lightBattleDefendDefault": true,

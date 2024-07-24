@@ -89,7 +89,7 @@ function LightEnemyGauge:drawGauge()
     Draw.setColor(self.back_color)
     love.graphics.rectangle("fill", 0, 8, self.width, self.height)
     Draw.setColor(self.gauge_color)
-    love.graphics.rectangle("fill", 0, 8, self.gauge_amount, self.height)
+    love.graphics.rectangle("fill", 0, 8, (self.gauge_amount / self.gauge_max) * self.width, self.height)
 end
 
 function LightEnemyGauge:draw()

@@ -10,8 +10,6 @@ Utils.hook(LightItemMenu, "init", function(orig, self)
         self.party_select_confirm = false
     end
 
-    print(self.party_select_confirm)
-
     self.party_select_bg = UIBox(-36, 242, 372, 52)
     self.party_select_bg.visible = false
     self.party_select_bg.layer = -1

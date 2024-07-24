@@ -1,16 +1,14 @@
 local BasicAttackAnim, super = Class(Sprite, "BasicAttackAnim")
 
 function BasicAttackAnim:init(x, y, texture, stretch, options)
-    super.init(self, texture, x, y)
+    super.init(self, texture or "effects/attack/strike", x, y)
 
     options = options or {}
 
     self.layer = BATTLE_LAYERS["above_ui"] + 5
 
-    self.attack_texture = texture or "effects/attack/strike"
-
     self.stretch = stretch
-    if not MagicalGlass.solo_battles then
+    if not Game.battle.allow_party then
         self.stretch = nil
     end
 
@@ -23,8 +21,7 @@ function BasicAttackAnim:init(x, y, texture, stretch, options)
     self.after_func = options["after"] or function() end
 
     self:setColor(options["color"] or MagicalGlass.PALETTE["player_attack"])
-
-    self.attack_sprite = nil
+    self:setOrigin(options["origin"] or 0.5)
 end
 
 function BasicAttackAnim:onAdd()
@@ -35,28 +32,18 @@ function BasicAttackAnim:onAdd()
         Assets.stopAndPlaySound(self.crit_sound)
     end
 
-    self.attack_sprite = Sprite(self.attack_texture)
-    if self.stretch then
-        self.attack_sprite:setScale((self.stretch * 2) - 0.5)
-    else
-        self.attack_sprite:setScale(1.5)
-    end
-    self.attack_sprite:setOrigin(0.5)
-    self.attack_sprite.inherit_color = true
-
     local speed
     if self.stretch then
         speed = (self.stretch / 4) / 1.6 -- probably isn't accurate
+        self:setScale((self.stretch * 2) - 0.5)
     else
         speed = 2/30
     end
 
-    self.attack_sprite:play(speed, false, function()
+    self:play(speed, false, function()
         self.after_func()
         self:remove()
     end)
-
-    self:addChild(self.attack_sprite)
 end
 
 return BasicAttackAnim

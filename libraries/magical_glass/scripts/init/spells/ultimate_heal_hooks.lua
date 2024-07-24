@@ -11,7 +11,6 @@ Utils.hook(Registry.getSpell("ultimate_heal"), "onLightBattleStart", function(or
     end)
     local amount = math.ceil(user.chara:getStat("magic") + 1)
     local maxed = target:heal(amount)
-    print(maxed)
     local heal_text
     if target.chara.you and maxed then
         heal_text = "* Your HP was maxed out."

@@ -55,7 +55,7 @@ function tough_glove:init()
 end
 
 function tough_glove:getBoltCount()
-    if Game.battle.solo then
+    if Game.battle.allow_party then
         return 1
     else
         return 4
@@ -63,7 +63,7 @@ function tough_glove:getBoltCount()
 end
 
 function tough_glove:getBoltSpeed()
-    if Game.battle.solo then
+    if Game.battle.allow_party then
         return self.bolt_speed * 1.2
     else
         return 12
@@ -79,7 +79,7 @@ function tough_glove:getLightBattleText(user, target)
 end
 
 function tough_glove:onLightBattleBoltHit(battler, enemy, attack)
-    if not Game.battle.solo and #attack.bolts >= 1 then
+    if not Game.battle.allow_party and #attack.bolts >= 1 then
         Assets.playSound("punchweak")
 
         local x, y = enemy:getRelativePos(Utils.random(enemy.width), Utils.random(enemy.height))
@@ -92,7 +92,7 @@ function tough_glove:onLightBattleBoltHit(battler, enemy, attack)
 end
 
 function tough_glove:onLightBattleAttack(battler, enemy, damage, stretch, attack, crit)
-    if Game.battle.solo then
+    if Game.battle.allow_party then
         local tough_glove_attack = ToughGloveAttack(self, battler, enemy, damage)
         Game.battle:addChild(tough_glove_attack)
 

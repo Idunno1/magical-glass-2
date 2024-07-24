@@ -100,7 +100,6 @@ function LightWave:spawnBulletTo(parent, bullet, ...)
         new_bullet = Registry.createBullet(bullet, ...)
     else
         local x, y = ...
-        print(x, y)
         table.remove(arg, 1)
         table.remove(arg, 1)
         new_bullet = Bullet(x, y, bullet, unpack(arg))

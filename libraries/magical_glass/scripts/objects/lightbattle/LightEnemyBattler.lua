@@ -21,6 +21,9 @@ function LightEnemyBattler:init(actor)
     -- The EXP rewarded when this enemy is defeated.
     -- Associated getter: getEXP (number, rounded)
     self.exp = 0
+    -- Whether this enemy should increase the kill count and call the current
+    -- encounter group (if applicable)'s onEnemyKillled function.
+    self.count_as_kill = true
 
     -- Whether this enemy can be spared via a pacifying spell.
     self.tired = false
@@ -45,7 +48,7 @@ function LightEnemyBattler:init(actor)
     -- Whether this enemy can be frozen.
     self.can_freeze = true
 
-    -- Whether this enemy can be selected or not.
+    -- Whether this enemy can be selected.
     self.selectable = true
 
     -- Whether this enemy's HP should be shown in ENEMYSELECT and if
@@ -235,8 +238,7 @@ function LightEnemyBattler:getDamageVoice()
 end
 
 function LightEnemyBattler:getAttackTension(points)
-    -- In Deltarune, this is always 10*2.5, except for JEVIL where it's 15*2.5
-    return points / 25
+    return 3
 end
 
 function LightEnemyBattler:getSpritePart(part)
@@ -383,9 +385,6 @@ function LightEnemyBattler:onDefeatVaporized(damage, battler)
         self:setAnimation("lightbattle_hurt")
     end
 
-    self.sprite.visible = false
-    self.overlay_sprite.visible = false
-
     local sprite = self.overlay_sprite
     local vapor
     if self.large_vapor then
@@ -393,6 +392,9 @@ function LightEnemyBattler:onDefeatVaporized(damage, battler)
     else
         vapor = DustEffect(sprite:getTexture(), sprite:getRelativePos(0, 0, self))
     end
+
+    self.sprite.visible = false
+    self.overlay_sprite.visible = false
      
     vapor:setColor(sprite:getDrawColor())
     vapor:setScale(sprite:getScale())
@@ -616,7 +618,7 @@ function LightEnemyBattler:spawnSpeechBubble(text, options)
     return bubble
 end
 
-function LightEnemyBattler:registerAct(name, description, party, tp, icons)
+function LightEnemyBattler:registerAct(name, description, party, tp, icons, unusable)
     if type(party) == "string" then
         if party == "all" then
             party = {}
@@ -630,6 +632,7 @@ function LightEnemyBattler:registerAct(name, description, party, tp, icons)
     local act = {
         ["character"] = nil,
         ["name"] = name,
+        ["unusable"] = unusable,
         ["description"] = description,
         ["party"] = party,
         ["tp"] = tp or 0,
@@ -887,10 +890,12 @@ function LightEnemyBattler:defeat(reason, violent)
     if violent then
         Game.battle.used_violence = true
         if self.done_state == "KILLED" or self.done_state == "FROZEN" then
-            if Game.battle.encounter_group then
-                Game.battle.encounter_group:onEnemyKilled(self)
+            if self.count_as_kill then
+                if Game.battle.encounter_group then
+                    Game.battle.encounter_group:onEnemyKilled(self)
+                end
+                MagicalGlass.kills = MagicalGlass.kills + 1
             end
-            MagicalGlass.kills = MagicalGlass.kills + 1
             Game.battle.exp = Game.battle.exp + self:getEXP()
         end
     end

@@ -5,7 +5,7 @@ local LightBattle, super = Class(Object, "LightBattle")
 function LightBattle:init()
     super.init(self)
 
-    self.solo = MagicalGlass.solo_battles
+    self.allow_party = MagicalGlass.party_members
     self.encounter_group = nil
 
     self.state = "NONE"
@@ -77,7 +77,6 @@ function LightBattle:init()
 
     self.attack_done = false
     self.cancel_attack = false
-    self.auto_attack_timer = 0
 
     self.waves = {}
     self.finished_waves = false
@@ -136,7 +135,7 @@ function LightBattle:playVaporizedSound()
 end
 
 function LightBattle:createPartyBattlers()
-    if self.solo then
+    if not self.allow_party then
         local battler = LightPartyBattler(Game.party[1])
         self:addChild(battler)
         table.insert(self.party, battler)
@@ -450,9 +449,13 @@ function LightBattle:nextTurn()
         end
     end
 
-    for _,battler in ipairs(self:getActiveParty()) do
+    for _,battler in ipairs(self.party) do
         battler.chara:getWeapon():onLightBattleNextTurn(battler, self.turn_count)
         battler.chara:getArmor(1):onLightBattleNextTurn(battler, self.turn_count)
+
+        if (battler.chara:getHealth() <= 0) and battler.chara:canAutoHeal() then
+            battler:heal(battler.chara:autoHealAmount())
+        end
     end
 
     for _,action in ipairs(self.current_actions) do
@@ -556,7 +559,7 @@ function LightBattle:nextParty()
         self.current_action_processing = 1
         self.current_selecting_index = 0
 
-        self.battle_ui:setupActionSelect(self.party[1])
+        self.battle_ui:setupActionSelect(self:getActiveParty()[1])
 
         self:startProcessingActions()
     else
@@ -651,16 +654,13 @@ function LightBattle:onStateChange(old, new)
         self:clearEncounterText()
 
         if self.state_reason == "SPELL" then
-            if self.solo or #self.party == 1 then
+            if not self.allow_party or #self.party == 1 then
                 self:pushAction("SPELL", self.party[1], self.state_extra["spell"])
             else
-                print(self.state_extra["spell"].id)
-                print(self.state_extra["spell"].name)
-                print(self.state_extra["spell"].data.id)
                 self.battle_ui:setupSpellPartySelect(self.party, self.state_extra["spell"])
             end            
         elseif self.state_reason == "ITEM" then
-            if self.solo or #self.party == 1 then
+            if not self.allow_party or #self.party == 1 then
                 self:pushAction("ITEM", self.party[1], self.state_extra["item"])
             else
                 self.battle_ui:setupItemPartySelect(self.party, self.state_extra["item"])
@@ -706,9 +706,9 @@ function LightBattle:onStateChange(old, new)
                     self:beginAction(action)
                     table.insert(self.attackers, battler)
                     table.insert(self.normal_attackers, battler)
-                elseif action and action.action == "AUTOATTACK" then
+--[[                 elseif action and action.action == "AUTOATTACK" then
                     table.insert(self.attackers, battler)
-                    table.insert(self.auto_attackers, battler)
+                    table.insert(self.auto_attackers, battler) ]]
                 end
             end
         end
@@ -720,10 +720,10 @@ function LightBattle:onStateChange(old, new)
             self:setState("ACTIONSDONE")
         else
             self.attack_done = false
-            if self.solo then
-                self.battle_ui:beginAttackSingle()
-            else
+            if self.allow_party then
                 self.battle_ui:beginAttackMulti()
+            else
+                self.battle_ui:beginAttackSingle()
             end
         end
     elseif new == "ENEMYDIALOGUE" then
@@ -1484,7 +1484,7 @@ function LightBattle:commitSingleAction(action)
             else
                 local item = action.data
                 if item:includes(LightEquipItem) and item.battle_swap_equip then
-                    if self.solo then
+                    if not self.allow_party then
                         -- replace weapons and armors instantly in solo mode
                         local replaced
                         if item.type == "weapon" then
@@ -1954,6 +1954,8 @@ function LightBattle:processAttackAction(action, battler, target)
         if not action.missed and action.points ~= 0 then
             local damage, crit = target:getAttackDamage(battler, attack, action.damage or 0)
             damage = math.max(0, damage)
+
+            Game:giveTension(Utils.round(target:getAttackTension(action.points or 100)))
 
             local result, final_damage, ignore_damage = weapon:onLightBattleAttack(battler, target, damage, action.stretch, attack, crit)
 

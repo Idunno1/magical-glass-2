@@ -45,8 +45,8 @@ function LightStatusDisplay:drawHP(x, y)
     local current_health = self.battler.chara:getHealth()
     local max_health = self.battler.chara:getStat("health")
 
-    local current_amount = current_health * 1.25
-    local max_amount = max_health * 1.25
+    local current_width = current_health * 1.25
+    local max_width = max_health * 1.25
 
     love.graphics.setFont(self.font)
     Draw.setColor(COLORS.white)
@@ -54,14 +54,16 @@ function LightStatusDisplay:drawHP(x, y)
     Draw.draw(self.hp_texture, 214, 5)
 
     if self.hp_gauge_limit then
-        current_amount = Utils.clamp(current_amount, 0, self.hp_gauge_limit)
-        max_amount = Utils.clamp(max_amount, 0, self.hp_gauge_limit)
+        current_width = Utils.clamp(current_width, 0, self.hp_gauge_limit)
+        max_width = Utils.clamp(max_width, 0, self.hp_gauge_limit)
     end
 
     Draw.setColor(MagicalGlass.PALETTE["player_health_back"])
-    Draw.rectangle("fill", x, y, max_amount, 21)
-    Draw.setColor(MagicalGlass.PALETTE["player_health"])
-    Draw.rectangle("fill", x, y, current_amount, 21)
+    Draw.rectangle("fill", x, y, max_width, 21)
+    if current_health > 0 then
+        Draw.setColor(MagicalGlass.PALETTE["player_health"])
+        Draw.rectangle("fill", x, y, current_width, 21)
+    end
 
     if max_health < 10 and max_health >= 0 then
         max_health = "0" .. tostring(max_health)
@@ -74,12 +76,14 @@ function LightStatusDisplay:drawHP(x, y)
     local color = COLORS.white
     if not self.battler.is_down then
         if Game.battle:hasAction(self.battler) and Game.battle:getActionBy(self.battler).action == "DEFEND" then
-            color = MagicalGlass.PALETTE["defend"]
+            color = MagicalGlass.PALETTE["player_status_defend"]
         end
+    else
+        color = MagicalGlass.PALETTE["player_status_down"]
     end
 
     Draw.setColor(color)
-    love.graphics.print(current_health .. " / " .. max_health, (x + max_amount) + 14, y)
+    love.graphics.print(current_health .. " / " .. max_health, (x + max_width) + 14, y)
 end
 
 function LightStatusDisplay:drawTP()

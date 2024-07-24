@@ -4,33 +4,34 @@ local lib = MagicalGlass
 -- VARIABLES
 
 local mg_palette_data = {
-    ["pink_spare"]         = {1, 167/255, 212/255, 1},
+    ["pink_spare"]           = {1, 167/255, 212/255, 1},
 
-    ["player_health_back"] = COLORS.red,
-    ["player_health"]      = COLORS.yellow,
+    ["player_health_back"]   = COLORS.red,
+    ["player_health"]        = COLORS.yellow,
 
-    ["player_attack"]      = { 1, 105/255, 105/255, 1 },
+    ["karma"]                = { 192/255, 0, 0, 1 },
 
-    ["menu_health_back"]   = { 128 / 255, 0, 0, 1 },
-    ["menu_health"]        = COLORS.lime,
+    ["player_status_defend"] = COLORS.aqua,
+    ["player_status_down"]   = COLORS.red,
 
-    ["enemy_health_back"]  = { 128 / 255, 0, 0, 1 },
-    ["enemy_health"]       = COLORS.lime,
-    ["enemy_mercy"]        = COLORS.yellow,
+    ["player_attack"]        = { 1, 105/255, 105/255, 1 },
 
-    ["karma"]              = { 192/255, 0, 0, 1 },
+    ["menu_health_back"]     = { 128 / 255, 0, 0, 1 },
+    ["menu_health"]          = COLORS.lime,
 
-    ["defend"]             = COLORS.aqua,
+    ["enemy_health_back"]    = { 128 / 255, 0, 0, 1 },
+    ["enemy_health"]         = COLORS.lime,
+    ["enemy_mercy"]          = COLORS.yellow,
 
-    ["tension_back"]       = { 128 / 255, 0, 0, 1 },
-    ["tension_decrease"]   = { 1, 0, 0, 1 },
-    ["tension_fill"]       = { 255 / 255, 160 / 255, 64 / 255, 1 },
-    ["tension_max"]        = { 255 / 255, 208 / 255, 32 / 255, 1 },
-    ["tension_maxtext"]    = { 1, 1, 0, 1 },
-    ["tension_desc"]       = { 255 / 255, 160 / 255, 64 / 255, 1 },
+    ["tension_back"]         = { 128 / 255, 0, 0, 1 },
+    ["tension_decrease"]     = { 1, 0, 0, 1 },
+    ["tension_fill"]         = { 255 / 255, 160 / 255, 64 / 255, 1 },
+    ["tension_max"]          = { 255 / 255, 208 / 255, 32 / 255, 1 },
+    ["tension_maxtext"]      = { 1, 1, 0, 1 },
+    ["tension_desc"]         = { 255 / 255, 160 / 255, 64 / 255, 1 },
 
-    ["en_back"]            = { 62/255, 283/255, 100/255, 1 },
-    ["en"]                 = { 184/255, 213/255, 70/255, 1 }
+    ["en_back"]              = { 62/255, 283/255, 100/255, 1 },
+    ["en"]                   = { 184/255, 213/255, 70/255, 1 }
 }
 MagicalGlass.PALETTE = {}
 setmetatable(MagicalGlass.PALETTE, {
@@ -188,7 +189,7 @@ end
 function lib:save(data)
     data.magical_glass_2 = {}
     data.magical_glass_2["default_battle_system"]       = self.default_battle_system
-    data.magical_glass_2["solo_battles"]                = self.solo_battles
+    data.magical_glass_2["party_members"]               = self.party_members
     data.magical_glass_2["advanced_save_menu"]          = self.advanced_save_menu
 
     data.magical_glass_2["light_battle_text_shake"]     = self.light_battle_text_shake
@@ -218,7 +219,7 @@ function lib:load(data, is_new_file)
         end
 
         self.default_battle_system          = getConfigOption("defaultBattleSystem", "undertale")
-        self.solo_battles                   = getConfigOption("soloBattles", true)
+        self.party_members                  = getConfigOption("allowPartyMembers", true)
         self.advanced_save_menu             = getConfigOption("advancedSaveMenu", true)
 
         self.light_battle_text_shake        = getConfigOption("lightBattleTextShake", true)
@@ -238,7 +239,7 @@ function lib:load(data, is_new_file)
         self:setGameOvers(0)
     else
         self.default_battle_system          = data.magical_glass_2["default_battle_system"]
-        self.solo_battles                   = data.magical_glass_2["solo_battles"]
+        self.party_members                  = data.magical_glass_2["party_members"]
         self.advanced_save_menu             = data.magical_glass_2["advanced_save_menu"]
 
         self.light_battle_text_shake        = data.magical_glass_2["light_battle_text_shake"]
@@ -456,7 +457,6 @@ function lib:toggleDimensionalBoxB(active)
     else
         local index
         for i, call in ipairs(Game.world.calls) do
-            print(i)
             if call[1] == "Dimensional Box B" then index = i end
             break
         end

@@ -112,8 +112,8 @@ function LightPartyBattler:removeHealth(amount)
             if #Game.battle.party == 1 then
                 self.chara:setHealth(0)
             else
-                amount = math.abs((self.chara:getHealth() - (self.chara:getStat("health") / 2)))
-                self.chara:setHealth(Utils.round(((-self.chara:getStat("health")) / 2)))
+                amount = math.abs((self.chara:getHealth() - (self.chara:getStat("health") / 5)))
+                self.chara:setHealth(math.floor(((-self.chara:getStat("health")) / 5)))
             end
         end
     end
@@ -121,7 +121,7 @@ function LightPartyBattler:removeHealth(amount)
 end
 
 function LightPartyBattler:heal(amount, sound)
-    if sound ~= nil and sound == false then
+    if sound == nil or sound == false then
         Assets.stopAndPlaySound("power")
     end
 
@@ -143,7 +143,7 @@ end
 function LightPartyBattler:down()
     self.is_down = true
     if self.action then
-        Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id))
+        Game.battle:removeQueuedAction(Game.battle:getPartyIndex(self.chara.id))
     end
     Game.battle:checkGameOver()
 end

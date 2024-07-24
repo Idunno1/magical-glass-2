@@ -329,7 +329,7 @@ function LightBattleCutscene:speechBubble(text, x, y, options)
     if wait then
         return self:wait(wait_func)
     else
-        return wait_func, bubbles
+        return wait_func, bubble
     end
 end
 
@@ -358,16 +358,8 @@ function LightBattleCutscene:choicer(choices, options)
 end
 
 function LightBattleCutscene:closeText()
-    local choice_box_neo = Game.battle.battle_ui.choice_box_neo
     local choice_box = Game.battle.battle_ui.choice_box
     local text = Game.battle.battle_ui.encounter_text
-    if choice_box_neo.active then
-        choice_box_neo:clearChoices()
-        choice_box_neo.active = false
-        choice_box_neo.visible = false
-        text.active = true
-        text.visible = true
-    end
     if choice_box.active then
         choice_box:clearChoices()
         choice_box.active = false
