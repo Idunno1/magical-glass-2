@@ -7,7 +7,7 @@
     "subtitle": "",
 
     // The version of your mod.
-    "version": "v1.0.0",
+    "version": "beta v1.0.0",
     // What version of the engine your mod was made with.
     "engineVer": "v0.9.0-dev",
 
@@ -20,27 +20,19 @@
     "map": "room1",
 
     // The party. The first character is the player.
-    "party": ["kris", "susie", "ralsei"],
+    "party": ["kris"],
 
     // The inventory. Contains three darkburgers, a cell phone and a shadow crystal by default.
     "inventory": {
-        "items": ["glowshard", "darkburger", "darkburger", "darkburger"],
-        "key_items": ["cell_phone", "shadowcrystal"]
+        "items": ["mg_item/monster_candy", "mg_item/monster_candy", "mg_item/monster_candy", "mg_item/sea_tea", "mg_item/instant_noodles"],
+        "box_a": ["mg_item/toy_knife", "mg_item/tough_glove", "mg_item/ballet_shoes", "mg_item/torn_notebook", "mg_item/burnt_pan", "mg_item/empty_gun", "mg_item/worn_dagger", "mg_item/real_knife"]
     },
 
     // Equipment for your party. Not specifying equipment defaults to the following.
     "equipment": {
         "kris": {
-            "weapon": "wood_blade",
-            "armor": ["amber_card", "amber_card"]
-        },
-        "susie": {
-            "weapon": "mane_ax",
-            "armor": ["amber_card", "amber_card"]
-        },
-        "ralsei": {
-            "weapon": "red_scarf",
-            "armor": ["amber_card", "amber_card"]
+            "weapon": "mg_item/stick",
+            "armor": ["mg_item/bandage"]
         }
     },
 
@@ -60,7 +52,8 @@
     // These config values can control chapter-specific features as well.
     "config": {
         "kristal": {
-            // End of config
+            "lightCurrency": "Gold",
+            "lightCurrencyShort": "G"
         }
     }
 }
