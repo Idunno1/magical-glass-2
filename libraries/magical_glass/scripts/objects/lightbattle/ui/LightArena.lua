@@ -86,12 +86,16 @@ function LightArena:resetPosition(after)
 end
 
 function LightArena:setTargetSize(tw, th, after)
-    self.target_size = {width = tw or self.width, height = th or self.height}
+    local current_tw = self.target_size and self.target_size.width
+    local current_th = self.target_size and self.target_size.height
+    self.target_size = {width = tw or current_tw or self.width, height = th or current_th or self.height}
     self.target_size_callback = after or function() end
 end
 
 function LightArena:setTargetPos(tx, ty, after)
-    self.target_position = {x = tx or self.x, y = ty or self.y}
+    local current_tx = self.target_size and self.target_size.x
+    local current_tx = self.target_size and self.target_size.y
+    self.target_position = {x = tx or current_tx or self.x, y = ty or current_ty or self.y}
     self.target_position_callback = after or function() end
 end
 
