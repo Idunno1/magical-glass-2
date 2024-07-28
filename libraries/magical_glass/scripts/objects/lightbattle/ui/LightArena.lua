@@ -1,7 +1,9 @@
 local LightArena, super = Class(Object, "LightArena")
 
-function LightArena:init(x, y, shape)
-    super.init(self, x, y, shape)
+function LightArena:init(x, y, shape, use_border)
+    super.init(self, x, y)
+    
+    use_border = use_border or true
 
     self:setOrigin(0.5, 1)
 
@@ -19,15 +21,24 @@ function LightArena:init(x, y, shape)
     self.color = {1, 1, 1}
     self.bg_color = {0, 0, 0}
 
-    self.sprite = ArenaSprite(self)
-    self.sprite.color = {0, 0, 0, 0}
-    self.sprite.layer = BATTLE_LAYERS["below_ui"]
-    self:addChild(self.sprite)
+    self.sprite = nil
+    self.sprite_border = nil
 
-    self.sprite_border = ArenaSprite(self)
-    self.sprite_border.background = false
-    self.sprite_border.layer = BATTLE_LAYERS["above_bullets"]
-    Game.battle:addChild(self.sprite_border)
+    if use_border then
+        self.sprite = ArenaSprite(self)
+        self.sprite.color = {0, 0, 0, 0}
+        self.sprite.layer = BATTLE_LAYERS["below_ui"]
+        self:addChild(self.sprite)
+    
+        self.sprite_border = ArenaSprite(self)
+        self.sprite_border.background = false
+        self.sprite_border.layer = BATTLE_LAYERS["above_bullets"]
+        Game.battle:addChild(self.sprite_border)
+    else
+        self.sprite = ArenaSprite(self)
+        self.sprite.layer = BATTLE_LAYERS["below_ui"]
+        self:addChild(self.sprite)
+    end
 
     self.mask = ArenaMask(1, 0, 0, self)
     self.mask.layer = BATTLE_LAYERS["above_ui"]
@@ -44,14 +55,18 @@ function LightArena:disable()
     self.collidable = false
     self.active = false
     self.visible = false
-    self.sprite_border.visible = false
+    if self.sprite_border then
+        self.sprite_border.visible = false
+    end
 end
 
 function LightArena:enable()
     self.collidable = true
     self.active = true
     self.visible = true
-    self.sprite_border.visible = true
+    if self.sprite_border then
+        self.sprite_border.visible = true
+    end
 end
 
 function LightArena:isResizing()
@@ -210,7 +225,9 @@ function LightArena:update()
     end
 
     local x, y = self:getRelativePos()
-    self.sprite_border:setPosition(math.ceil(x), math.ceil(y)) 
+    if self.sprite_border then
+        self.sprite_border:setPosition(math.ceil(x), math.ceil(y))
+    end
     
     super.update(self)
 
