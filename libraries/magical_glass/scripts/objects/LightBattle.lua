@@ -732,7 +732,7 @@ function LightBattle:onStateChange(old, new)
         self.battle_ui:clearStack()
         self.battle_ui.action_select:unselect()
 
-        self.current_selecting = 0
+        self.current_selecting_index = 0
         self.enemy_dialogue_timer = 3 * 30
         self.use_dialogue_timer = true
 
@@ -838,7 +838,7 @@ function LightBattle:onStateChange(old, new)
         self.battle_ui:clearStack()
         self.battle_ui.action_select:unselect()
     
-        self.current_selecting = 0
+        self.current_selecting_index = 0
 
         for _,party in ipairs(self.party) do
             self:removeQueuedAction(self:getPartyIndex(party))
@@ -856,7 +856,7 @@ function LightBattle:onStateChange(old, new)
         self:handleVictory()
     elseif new == "TRANSITIONOUT" then
         self.ended = true
-        self.current_selecting = 0
+        self.current_selecting_index = 0
         if self.encounter_context and self.encounter_context:includes(ChaserEnemy) then
             for _,enemy in ipairs(self.encounter_context:getGroupedEnemies(true)) do
                 enemy:onEncounterTransitionOut(enemy == self.encounter_context, self.encounter)
@@ -1214,7 +1214,7 @@ function LightBattle:handleVictory()
     self.battle_ui.action_select:unselect()
 
     self.music:stop()
-    self.current_selecting = 0
+    self.current_selecting_index = 0
 
     self:resetParty()
 

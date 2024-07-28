@@ -1,9 +1,9 @@
-local test, super = Class(LightEnemyBattler)
+local dummy, super = Class(LightEnemyBattler)
 
-function test:init()
+function dummy:init()
     super.init(self)
 
-    self.name = "test"
+    self.name = "Dummy"
     self:setActor("dummy_ut")
 
     self:registerAct("Talk")
@@ -17,10 +17,10 @@ function test:init()
 
     self.count_as_kill = false
     
-    self.check = "ATK 0 DEF 0\n* A cotton heart and a button eye\n*You are the apple of my eye"
+    self.check = "ATK 0 DEF 0\n* A cotton heart and a button eye\n* You are the apple of my eye"
 
     self.text = {
-        "* Dummy stands around absentmindedly.",
+        "* Dummy stands around\nabsentmindedly.",
         "* The power of fluffy boys is\nNOT in the air.",
         "* Smells like...[wait:1s]\n* A Dummy."
     }
@@ -37,7 +37,7 @@ function test:init()
     }
 end
 
-function test:onAct(battler, name)
+function dummy:onAct(battler, name)
     if name == "Talk" then
         self:addMercy(100)
         return {
@@ -56,4 +56,4 @@ function test:onAct(battler, name)
     return super.onAct(self, battler, name)
 end
 
-return test
+return dummy

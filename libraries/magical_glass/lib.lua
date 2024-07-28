@@ -324,6 +324,43 @@ function lib:registerDebugOptions(debug)
             end)
         end
     end
+
+    -- Waves
+    local in_game = function() return Kristal.getState() == Game end
+    local in_battle = function() return in_game() and Game.state == "BATTLE" end
+    local in_dark_battle = function() return in_battle() and Game.battle:includes(Battle) end
+    local in_light_battle = function() return in_battle() and Game.battle:includes(LightBattle) end
+
+    debug:registerMenu("light_wave_select", "Wave Select", "search")
+
+    local wave_select
+    for _,menu in ipairs(debug.menus["main"].options) do
+        if menu.name == "Start Wave" then wave_select = menu break end
+    end
+    wave_select.func = function()
+        if in_dark_battle() then
+            debug:enterMenu("wave_select", 0)
+        elseif in_light_battle() then
+            debug:enterMenu("light_wave_select", 0)
+        end
+    end
+
+    local light_waves = {}
+    for id,_ in pairs(MagicalGlass.registry.light_waves) do
+        table.insert(light_waves, id)
+    end
+
+    table.sort(light_waves, function(a, b)
+        return a < b
+    end)
+
+    for _,id in ipairs(light_waves) do
+        debug:registerOption("light_wave_select", id, "Start this wave.", function()
+            print('hi')
+            Game.battle:setState("ENEMYDIALOGUE", {id})
+            debug:closeMenu()
+        end)
+    end
 end
 
 function lib:registerTextCommands(text)
