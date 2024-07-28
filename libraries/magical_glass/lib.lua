@@ -266,6 +266,15 @@ end
 
 -- EVENTS
 
+-- Load lightbattle stuff early so other libraries can inherit from it
+function lib:onRegisterGlobals()
+    for _,path,object in Registry.iterScripts("lightbattle", true) do
+        local id = object.id or path
+        Registry.objects[id] = object
+        Registry.registerGlobal(id, object)
+    end
+end
+
 function lib:registerDebugOptions(debug)
     -- Items
     debug:registerMenu("give_item", "Give Item")
