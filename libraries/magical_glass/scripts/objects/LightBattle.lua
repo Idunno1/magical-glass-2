@@ -2542,7 +2542,7 @@ function LightBattle:update()
                 end
             end
 
-            if all_done then
+            if all_done and (not self.arena:isResizing() or self.arena:isMoving()) then
                 self:setState("DIALOGUEEND")
             end
         end
