@@ -294,8 +294,10 @@ function LightEnemyBattler:onSpared()
 end
 
 function LightEnemyBattler:onHurt(damage, battler)
-    battler.chara:onLightBattleAttackHit(self, damage)
-
+    if battler then
+        battler.chara:onLightBattleAttackHit(self, damage)
+    end
+    
     self:toggleOverlay(true)
     if self.actor.light_enemy_sprite then
         if not self:setAnimation("lightbattle_hurt") then
