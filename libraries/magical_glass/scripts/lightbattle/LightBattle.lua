@@ -2568,6 +2568,10 @@ function LightBattle:update()
         self:updateWaves()
     end
 
+    if self.state ~= "TRANSITIONOUT" then
+        self.encounter:update()
+    end
+
     self.update_child_list = true
 
     super.update(self)

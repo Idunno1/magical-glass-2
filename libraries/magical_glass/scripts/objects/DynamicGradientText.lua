@@ -38,7 +38,7 @@ end
 function DynamicGradientText:draw()
     -- i hate this
     if self.draw_gradient and #self.gradient_colors > 1 then
-        local new_canvas = Draw.pushCanvas(self:getTextWidth(), self:getTextHeight())
+        local new_canvas = Draw.pushCanvas(self:getTextWidth(), self:getTextHeight() + 5)
         Draw.setColor(1, 1, 1, 1)
         if self.draw_every_frame then
             for _,node in ipairs(self.nodes_to_draw) do
