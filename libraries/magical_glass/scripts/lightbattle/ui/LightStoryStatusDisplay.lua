@@ -37,8 +37,8 @@ function LightStoryStatusDisplay:drawHP(x, y)
     local current_health = self.battler.chara:getHealth()
     local max_health = self.battler.chara:getStat("health")
 
-    local current_amount = current_health * 1.25
-    local max_amount = max_health * 1.25
+    local current_amount = current_health * 1.2 + 1
+    local max_amount = max_health * 1.2 + 1
 
     love.graphics.setFont(self.font)
     Draw.setColor(COLORS.white)

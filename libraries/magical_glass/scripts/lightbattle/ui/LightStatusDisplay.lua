@@ -45,8 +45,8 @@ function LightStatusDisplay:drawHP(x, y)
     local current_health = self.battler.chara:getHealth()
     local max_health = self.battler.chara:getStat("health")
 
-    local current_width = current_health * 1.25
-    local max_width = max_health * 1.25
+    local current_width = current_health * 1.2 + 1
+    local max_width = max_health * 1.2 + 1
 
     love.graphics.setFont(self.font)
     Draw.setColor(COLORS.white)
