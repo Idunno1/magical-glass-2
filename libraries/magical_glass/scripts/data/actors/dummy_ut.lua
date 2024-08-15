@@ -46,7 +46,7 @@ function actor:init()
     self.light_enemy_width = 49
     self.light_enemy_height = 53
 
-    self:addLightEnemyPart("body", "battle/body")
+    self:addLightEnemyPart("body", {create = "battle/body"})
 end
 
 return actor

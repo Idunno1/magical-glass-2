@@ -36,19 +36,25 @@ Utils.hook(Actor, "onLightEnemySetSprite", function(orig, self, sprite, overlay,
 Utils.hook(Actor, "preLightEnemySetAnim", function(orig, self, sprite, overlay, anim, callback) end)
 Utils.hook(Actor, "onLightEnemySetAnim", function(orig, self, sprite, overlay, anim, callback) end)
 
-Utils.hook(Actor, "addLightEnemyPart", function(orig, self, id, create, functions, extra_func, parent_id)
-    if type(extra_func) == "string" then
-        parent_id = extra_func
-        extra_func = {}
+Utils.hook(Actor, "addLightEnemyPart", function(orig, self, id, ...)
+    local varg = {...}
+    local real_args = {}
+    for k,v in pairs(varg) do
+        for a,b in pairs(v) do
+            real_args[a] = b
+        end
     end
-    functions = functions or {}
+    real_args.functions = varg.functions or {}
     self.light_enemy_parts[id] = {}
-    self.light_enemy_parts[id]._create     = create
-    self.light_enemy_parts[id]._init       = functions["init"]   or function() end
-    self.light_enemy_parts[id]._update     = functions["update"] or function() end
-    self.light_enemy_parts[id]._draw       = functions["draw"]   or function() end
-    self.light_enemy_parts[id]._extra_func = extra_func or {}
-    self.light_enemy_parts[id].__parent_id = parent_id
+    self.light_enemy_parts[id]._create     = real_args.create
+    self.light_enemy_parts[id]._offset     = real_args.offset
+    self.light_enemy_parts[id]._init       = real_args.functions["init"]   or function() end
+    self.light_enemy_parts[id]._update     = real_args.functions["update"] or function() end
+    self.light_enemy_parts[id]._draw       = real_args.functions["draw"]   or function() end
+    self.light_enemy_parts[id]._extra_func = real_args.extra_func or {}
+    self.light_enemy_parts[id].__parent_id = real_args.parent_id
+
+    print(self.light_enemy_parts[id]._create)
 end)
 
 Utils.hook(Actor, "createLightEnemySprite", function(orig, self)

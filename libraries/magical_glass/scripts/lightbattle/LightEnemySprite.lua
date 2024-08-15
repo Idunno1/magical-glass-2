@@ -24,19 +24,23 @@ function LightEnemySprite:init(actor)
     self.debug_rect = {0, 0, 0, 0}
 end
 
-function LightEnemySprite:createPart(id, create, functions, extra_func, parent_id)
-    if type(extra_func) == "string" then
-        parent_id = extra_func
-        extra_func = {}
+function LightEnemySprite:createPart(id, ...)
+    local varg = {...}
+    local real_args = {}
+    for k,v in pairs(varg) do
+        for a,b in pairs(v) do
+            real_args[a] = b
+        end
     end
-    functions = functions or {}
+    real_args.functions = real_args.functions or {}
     self.sprite_parts[id] = {}
-    self.sprite_parts[id]._create     = create
-    self.sprite_parts[id]._init       = functions["init"]   or function() end
-    self.sprite_parts[id]._update     = functions["update"] or function() end
-    self.sprite_parts[id]._draw       = functions["draw"]   or function() end
-    self.sprite_parts[id]._extra_func = extra_func or {}
-    self.sprite_parts[id].__parent_id = parent_id
+    self.sprite_parts[id]._create     = real_args.create
+    self.sprite_parts[id]._offset     = real_args.offset
+    self.sprite_parts[id]._init       = real_args.functions["init"]   or function() end
+    self.sprite_parts[id]._update     = real_args.functions["update"] or function() end
+    self.sprite_parts[id]._draw       = real_args.functions["draw"]   or function() end
+    self.sprite_parts[id]._extra_func = real_args.extra_func or {}
+    self.sprite_parts[id].__parent_id = real_args.parent_id
     return self.sprite_parts[id]
 end
 
@@ -114,6 +118,9 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
                 if part._init then
                     part._init(part)
                 end
+                if part._offset then
+                    part.__sprite:move(unpack(part._offset))
+                end
                 self:addChild(part.__sprite)
             else
                 print("[MG WARNING] Couldn't create part \"" .. id .. ".\"")
@@ -123,7 +130,7 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
 
     for id, part in pairs(self.sprite_parts) do
         if part.__parent_id then
-            part:setParent(self.sprite_parts[part.__parent_id])
+            part.__sprite:setParent(self.sprite_parts[part.__parent_id].__sprite)
         end
     end
 
