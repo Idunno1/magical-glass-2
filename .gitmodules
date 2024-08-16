@@ -1,3 +1,3 @@
-[submodule "magical-glass-2-deltatraveled"]
-	path = libararies/magical-glass-2-deltatraveled
+[submodule "libraries/magical_glass_2_deltatraveled"]
+	path = libraries/magical_glass_2_deltatraveled
 	url = https://github.com/Idunno1/magical-glass-2-deltatraveled
