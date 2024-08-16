@@ -53,6 +53,7 @@ Utils.hook(Actor, "addLightEnemyPart", function(orig, self, id, ...)
     self.light_enemy_parts[id]._draw       = real_args.draw   or function() end
     self.light_enemy_parts[id]._extra_func = real_args.extra_func or {}
     self.light_enemy_parts[id].__parent_id = real_args.parent_id
+    self.light_enemy_parts[id]._layer      = real_args.layer
 
     print(self.light_enemy_parts[id]._create)
 end)
