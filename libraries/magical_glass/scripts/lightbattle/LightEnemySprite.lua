@@ -121,6 +121,9 @@ function LightEnemySprite:resetSprite(ignore_actor_callback)
                 if part._offset then
                     part.__sprite:move(unpack(part._offset))
                 end
+                if part._layer then
+                    part.__sprite.layer = part.__sprite.layer + part._layer
+                end
                 self:addChild(part.__sprite)
             else
                 print("[MG WARNING] Couldn't create part \"" .. id .. ".\"")
