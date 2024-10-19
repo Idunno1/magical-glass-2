@@ -35,7 +35,7 @@ function LightEnemySprite:createPart(id, ...)
     real_args.functions = real_args.functions or {}
     self.sprite_parts[id] = {}
     self.sprite_parts[id]._create     = real_args.create
-    self.sprite_parts[id]._offset     = real_args.offset
+    self.sprite_parts[id]._offset     = real_args.offset or {0, 0}
     self.sprite_parts[id]._init       = real_args.functions["init"]   or function() end
     self.sprite_parts[id]._update     = real_args.functions["update"] or function() end
     self.sprite_parts[id]._draw       = real_args.functions["draw"]   or function() end
