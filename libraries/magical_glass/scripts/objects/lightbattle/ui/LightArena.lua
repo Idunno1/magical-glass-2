@@ -207,6 +207,12 @@ function LightArena:updateTransition()
     end
 end
 
+function LightArena:setPosition(x, y)
+    super.setPosition(self, x, y)
+    local relative_x, relative_y = self:getRelativePos()
+    self.sprite_border:setPosition(math.ceil(relative_x), math.ceil(relative_y))
+end
+
 function LightArena:update()
     self:updateTransition()
 

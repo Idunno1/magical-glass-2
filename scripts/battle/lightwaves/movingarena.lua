@@ -5,6 +5,7 @@ function MovingArena:init()
 
     -- Initialize timer
     self.siner = 0
+    self.arena_width = 142
 end
 
 function MovingArena:onStart()
@@ -15,7 +16,7 @@ function MovingArena:onStart()
     self:spawnBulletTo(Game.battle.arena, "arenahazard", arena.width/2, 0, math.rad(0))
 
     -- Spawn spikes on bottom of arena (rotated 180 degrees)
-    self:spawnBulletTo(Game.battle.arena, "arenahazard", arena.width/2, arena.height, math.rad(180))
+    self:spawnBulletTo(Game.battle.arena, "arenahazard", arena.width/2, arena.height+1, math.rad(180))
 
     -- Store starting arena position
     self.arena_start_x = arena.x
