@@ -328,7 +328,13 @@ function LightBattle:postInit(state, encounter)
     end
 end
 
+---@deprecated
 function LightBattle:getSoulPosition()
+    Kristal.Console:warn("Deprecated method LightBattle:getSoulPosition in use")
+    return self:getSoulLocation()
+end
+
+function LightBattle:getSoulLocation()
     if self.soul then
         return self.soul:getPosition()
     end
@@ -2429,7 +2435,7 @@ function LightBattle:onKeyPressed(key)
             -- "You dare bring light into my lair? You must die!" -Ganon 1993
             if key == "j" and Input.shift() then
                 if self.soul then
-                    Game:gameOver(self:getSoulPosition())
+                    Game:gameOver(self:getSoulLocation())
                 else
                     Game:gameOver()
                 end
