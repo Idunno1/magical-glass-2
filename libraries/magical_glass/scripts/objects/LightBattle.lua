@@ -803,17 +803,18 @@ function LightBattle:onStateChange(old, new)
                 break
             end
         end
-        
+        local function finish()
+            self.soul.can_move = true
+
+            self:setState("DEFENDING")
+        end
         if not dont_change then
-            self.arena:setTargetSize(nil, self.begin_arena_height)
+            self.arena:setTargetSize(self.arena.target_size and self.arena.target_size.width, self.begin_arena_height, finish)
             self.begin_arena_height = nil
         else
             self.begin_arena_height = nil
+            finish()
         end
-
-        self.soul.can_move = true
-
-        self:setState("DEFENDING")
     elseif new == "DEFENDING" then
         self.wave_length = 0
         self.wave_timer = 0
